@@ -76,10 +76,6 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             if (button->features & QStyleOptionButton::Flat) {
                 brush = QBrush(pal.color(QPalette::Window));
 
-                if (button->state & QStyle::State_HasFocus) {
-                    brush = QBrush(pal.color(QPalette::Window).lighter(125));
-                }
-
                 if (button->state & QStyle::State_MouseOver) {
                     brush = QBrush(pal.color(QPalette::Window).lighter());
                 }
@@ -785,14 +781,14 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
                 brush = QBrush(pal.color(QPalette::Window));
 
                 if (button->state & QStyle::State_MouseOver) {
-                    brush = QBrush(pal.color(QPalette::Button).lighter());
+                    brush = QBrush(pal.color(QPalette::Window).lighter());
                 }
 
                 if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
-                    brush = QBrush(pal.color(QPalette::Button).darker());
+                    brush = QBrush(pal.color(QPalette::Window).darker());
                 }
             }
-            textPen = pal.color(QPalette::ButtonText);
+            textPen = pal.color(QPalette::WindowText);
         }
 
         painter->setBrush(brush);
@@ -882,7 +878,18 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         }
 
         if (showIcon) {
-            QIcon icon = button->icon;
+            QIcon icon;
+            if (button->arrowType & Qt::UpArrow) {
+                icon = QIcon::fromTheme("go-up");
+            } else if (button->arrowType & Qt::DownArrow) {
+                icon = QIcon::fromTheme("go-down");
+            } else if (button->arrowType & Qt::LeftArrow) {
+                icon = QIcon::fromTheme("go-previous");
+            } else if (button->arrowType & Qt::RightArrow) {
+                icon = QIcon::fromTheme("go-next");
+            } else {
+                icon = button->icon;
+            }
             QImage image = icon.pixmap(button->iconSize).toImage();
             image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
             /*if (image.colorCount() == 0) {
@@ -1050,6 +1057,18 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         triangle.append(QPoint(rect.left(), rect.top()));
         triangle.append(QPoint(rect.right(), rect.top()));
         triangle.append(QPoint(rect.left() + halfWidth, rect.bottom()));
+        painter->drawPolygon(triangle);
+        break;
+    }
+
+    case QStyle::PE_IndicatorArrowUp:
+    {
+        painter->setBrush(pal.color(QPalette::WindowText));
+
+        QPolygon triangle;
+        triangle.append(QPoint(rect.left(), rect.bottom()));
+        triangle.append(QPoint(rect.right(), rect.bottom()));
+        triangle.append(QPoint(rect.left() + halfWidth, rect.top()));
         painter->drawPolygon(triangle);
         break;
     }
