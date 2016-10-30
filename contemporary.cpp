@@ -616,7 +616,6 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         painter->setPen(pal.color(QPalette::WindowText));
         painter->drawText(rect, Qt::AlignCenter, text);
 
-
         if (!item->icon.isNull()) {
             QRect iconRect = rect;
             iconRect.adjust(4, 0, 4, 0);
@@ -627,7 +626,6 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
 
             painter->drawImage(iconRect, item->icon.pixmap(item->iconSize).toImage());
         }
-
 
         break;
     }
@@ -716,7 +714,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         }
         painter->setBrush(brush);
         painter->drawRect(rect.adjusted(0, 0, -1, -1));
-        if (item->iconSize.isEmpty()) {
+        if (item->currentIcon.isNull()) {
             painter->drawText(rect.adjusted(4, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, item->currentText);
         } else {
             painter->drawText(rect.adjusted(8 + item->iconSize.width(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, item->currentText);
@@ -953,6 +951,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
     painter->setPen(transparent);
 
     int halfHeight = rect.height() / 2;
+    int halfWidth = rect.width() / 2;
 
     switch (primitive) {
     case QStyle::PE_FrameGroupBox:
@@ -1010,10 +1009,6 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             brush = QBrush(col(67, 67, 67));
         }
 
-        if (option->state & QStyle::State_HasFocus) {
-            brush = QBrush(col(225, 0, 0));
-        }
-
         if (option->state & QStyle::State_MouseOver) {
             brush = QBrush(col(250, 0, 0));
         }
@@ -1022,8 +1017,18 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             brush = QBrush(col(150, 0, 0));
         }
 
+        QRect closeButtonRect = rect;
+        //closeButtonRect.adjust(3, 3, -3, -3);
+
         painter->setBrush(brush);
-        painter->drawEllipse(rect);
+        painter->drawEllipse(closeButtonRect);
+        break;
+    }
+    case PE_IndicatorTabTearLeft:
+    {
+        painter->setPen(pal.color(QPalette::WindowText));
+        painter->drawLine(rect.topLeft(), rect.bottomLeft());
+        break;
     }
     case QStyle::PE_IndicatorArrowRight:
     {
@@ -1034,6 +1039,55 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         triangle.append(QPoint(rect.left(), rect.top()));
         triangle.append(QPoint(rect.left() + halfHeight, halfHeight));
         painter->drawPolygon(triangle);
+        break;
+    }
+
+    case QStyle::PE_IndicatorArrowDown:
+    {
+        painter->setBrush(pal.color(QPalette::WindowText));
+
+        QPolygon triangle;
+        triangle.append(QPoint(rect.left(), rect.top()));
+        triangle.append(QPoint(rect.right(), rect.top()));
+        triangle.append(QPoint(rect.left() + halfWidth, rect.bottom()));
+        painter->drawPolygon(triangle);
+        break;
+    }
+    case QStyle::PE_IndicatorBranch:
+    {
+        switch (option->state) {
+        case QStyle::State_Children:
+        {
+            //Draw disclosure triangle (closed)
+            painter->setBrush(pal.color(QPalette::WindowText));
+            painter->drawRect(rect);
+            break;
+        }
+        case QStyle::State_Item:
+        {
+            //Draw horizontal branch
+            //Show vertical branch
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            break;
+        }
+        case QStyle::State_Open:
+        {
+            //Show disclosure triangle (open)
+            painter->setBrush(pal.color(QPalette::WindowText));
+            painter->drawRect(rect);
+            break;
+        }
+        case QStyle::State_Sibling:
+        {
+            //Show vertical branch
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(rect.topLeft(), rect.bottomLeft());
+            break;
+        }
+        }
+
+        break;
     }
     case QStyle::PE_PanelToolBar:
     {
@@ -1042,20 +1096,32 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         break;
     }
     case QStyle::PE_PanelItemViewItem:
-    case QStyle::PE_PanelItemViewRow:
+    //case QStyle::PE_PanelItemViewRow:
     {
+        const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
+        if (item == NULL) return;
+
+        QPen textPen;
         if (option->state & QStyle::State_Selected) {
             painter->setBrush(pal.brush(QPalette::Highlight));
+            textPen = pal.color(QPalette::HighlightedText);
             //painter->setPen(pal.color(QPalette::HighlightedText));
         } else if (option->state & QStyle::State_MouseOver) {
             QColor col = pal.color(QPalette::Highlight);
             col.setAlpha(127);
             painter->setBrush(col);
+            textPen = pal.color(QPalette::HighlightedText);
         } else {
             painter->setBrush(pal.brush(QPalette::Window));
+            textPen = pal.color(QPalette::WindowText);
             //painter->setPen(pal.color(QPalette::WindowText));
         }
         painter->drawRect(rect);
+
+        //Not sure why this works
+        //If we draw the actual text we get duplicate text.
+        painter->setPen(textPen);
+        painter->drawText(rect, "");
         break;
     }
     case QStyle::PE_IndicatorMenuCheckMark:
@@ -1113,7 +1179,8 @@ void Style::polish(QWidget *widget) {
             qobject_cast<QCheckBox*>(widget) ||
             qobject_cast<QComboBox*>(widget) ||
             qobject_cast<QToolButton*>(widget) ||
-            qobject_cast<QRadioButton*>(widget)) {
+            qobject_cast<QRadioButton*>(widget) ||
+            qobject_cast<QSlider*>(widget)) {
         widget->setAttribute(Qt::WA_Hover);
     } else if (qobject_cast<QAbstractItemView*>(widget)) {
         qobject_cast<QAbstractItemView*>(widget)->viewport()->setAttribute(Qt::WA_Hover);
@@ -1163,6 +1230,12 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
     {
         size.setHeight(contentsSize.height() + 20);
         size.setWidth(contentsSize.width() + 20);
+        return size;
+    }
+    case CT_TabBarTab:
+    {
+        size.setHeight(contentsSize.height() + 10);
+        size.setWidth(contentsSize.width() + 10);
         return size;
     }
     default:
