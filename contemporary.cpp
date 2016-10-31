@@ -879,13 +879,13 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
 
         if (showIcon) {
             QIcon icon;
-            if (button->arrowType & Qt::UpArrow) {
+            if (button->arrowType == Qt::UpArrow) {
                 icon = QIcon::fromTheme("go-up");
-            } else if (button->arrowType & Qt::DownArrow) {
+            } else if (button->arrowType == Qt::DownArrow) {
                 icon = QIcon::fromTheme("go-down");
-            } else if (button->arrowType & Qt::LeftArrow) {
+            } else if (button->arrowType == Qt::LeftArrow) {
                 icon = QIcon::fromTheme("go-previous");
-            } else if (button->arrowType & Qt::RightArrow) {
+            } else if (button->arrowType == Qt::RightArrow) {
                 icon = QIcon::fromTheme("go-next");
             } else {
                 icon = button->icon;
@@ -941,6 +941,12 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             painter->setBrush(pal.brush(QPalette::Window));
         }
         painter->drawRect(thumb);
+    }
+    case QStyle::CC_ScrollBar:
+    {
+        //Draw background
+        painter->setBrush(pal.brush(QPalette::Window));
+        painter->drawRect(rect);
     }
     default:
         QCommonStyle::drawComplexControl(control, option, painter, widget);
@@ -1037,75 +1043,69 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         painter->drawLine(rect.topLeft(), rect.bottomLeft());
         break;
     }
+    case QStyle::PE_IndicatorArrowDown:
     case QStyle::PE_IndicatorArrowRight:
     {
         painter->setBrush(pal.color(QPalette::WindowText));
 
-        QPolygon triangle;
-        triangle.append(QPoint(rect.left(), rect.bottom()));
-        triangle.append(QPoint(rect.left(), rect.top()));
-        triangle.append(QPoint(rect.left() + halfHeight, halfHeight));
-        painter->drawPolygon(triangle);
-        break;
-    }
+        QImage image;
+        if (primitive == QStyle::PE_IndicatorArrowRight) {
+            image = QIcon::fromTheme("go-next").pixmap(16, 16).toImage();
+        } else if (primitive == QStyle::PE_IndicatorArrowLeft) {
+            image = QIcon::fromTheme("go-previous").pixmap(16, 16).toImage();
+        } else if (primitive == QStyle::PE_IndicatorArrowDown) {
+            image = QIcon::fromTheme("go-down").pixmap(16, 16).toImage();
+        } else if (primitive == QStyle::PE_IndicatorArrowUp) {
+            image = QIcon::fromTheme("go-up").pixmap(16, 16).toImage();
+        }
+        tintImage(image, pal.color(QPalette::WindowText));
 
-    case QStyle::PE_IndicatorArrowDown:
-    {
-        painter->setBrush(pal.color(QPalette::WindowText));
-
-        QPolygon triangle;
-        triangle.append(QPoint(rect.left(), rect.top()));
-        triangle.append(QPoint(rect.right(), rect.top()));
-        triangle.append(QPoint(rect.left() + halfWidth, rect.bottom()));
-        painter->drawPolygon(triangle);
-        break;
-    }
-
-    case QStyle::PE_IndicatorArrowUp:
-    {
-        painter->setBrush(pal.color(QPalette::WindowText));
-
-        QPolygon triangle;
-        triangle.append(QPoint(rect.left(), rect.bottom()));
-        triangle.append(QPoint(rect.right(), rect.bottom()));
-        triangle.append(QPoint(rect.left() + halfWidth, rect.top()));
-        painter->drawPolygon(triangle);
+        QRect imageRect;
+        imageRect.setTop(rect.top() + (rect.height() / 2) - 8);
+        imageRect.setLeft(rect.left() + (rect.width() / 2) - 8);
+        imageRect.setSize(QSize(16, 16));
+        painter->drawImage(imageRect, image);
         break;
     }
     case QStyle::PE_IndicatorBranch:
     {
-        switch (option->state) {
-        case QStyle::State_Children:
-        {
-            //Draw disclosure triangle (closed)
-            painter->setBrush(pal.color(QPalette::WindowText));
-            painter->drawRect(rect);
-            break;
-        }
-        case QStyle::State_Item:
-        {
+
+        if (option->state & QStyle::State_Item) {
             //Draw horizontal branch
-            //Show vertical branch
             painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-            break;
-        }
-        case QStyle::State_Open:
-        {
-            //Show disclosure triangle (open)
-            painter->setBrush(pal.color(QPalette::WindowText));
-            painter->drawRect(rect);
-            break;
-        }
-        case QStyle::State_Sibling:
-        {
-            //Show vertical branch
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.topLeft(), rect.bottomLeft());
-            break;
-        }
+            painter->drawLine(rect.left() + rect.width() / 2, rect.top() + rect.height() / 2, rect.right(), rect.top() + rect.height() / 2);
+
+            //Draw top part of vertical branch
+            painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.top() + rect.height() / 2);
         }
 
+
+        if (option->state & QStyle::State_Sibling){
+            //Show vertical branch
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.bottom());
+        }
+
+        if (option->state & QStyle::State_Children) {
+            //Draw disclosure triangle (closed)
+            QRect triangleRect = rect;
+            triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
+            triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
+            triangleRect.setSize(QSize(8, 8));
+            painter->setBrush(pal.color(QPalette::WindowText));
+            painter->drawRect(triangleRect);
+        }
+
+        if (option->state & QStyle::State_Open) {
+            //Show disclosure triangle (open)
+            QRect triangleRect = rect;
+            triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
+            triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
+            triangleRect.setSize(QSize(8, 8));
+            painter->setBrush(pal.color(QPalette::Window));
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawRect(triangleRect);
+        }
         break;
     }
     case QStyle::PE_PanelToolBar:
