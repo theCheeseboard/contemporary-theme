@@ -186,8 +186,8 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             QRect tickArea = checkArea;
             tickArea.adjust(3, 3, -1, -1);
 
-            QPen pen = pal.color(QPalette::Window);
-            pen.setWidth(3);
+            /*QPen pen = pal.color(QPalette::Window);
+            pen.setWidth(1);
             painter->setPen(pen);
 
             QPoint p1, p2, p3;
@@ -197,7 +197,16 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             p3 = QPoint(tickArea.right(), tickArea.top() + (tickArea.height() / 4));
 
             painter->drawLine(p1, p2);
-            painter->drawLine(p2, p3);
+            painter->drawLine(p2, p3);*/
+        } else if (button->state & QStyle::State_NoChange) {
+            QPolygon triangle;
+            triangle.append(checkArea.topLeft());
+            triangle.append(checkArea.bottomLeft());
+            triangle.append(checkArea.topRight());
+
+            painter->setPen(transparent);
+            painter->setBrush(pal.color(QPalette::WindowText));
+            painter->drawPolygon(triangle);
         }
 
 
@@ -929,8 +938,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         thumb.moveLeft(selection.right() - (thumb.width() / 2));
 
         if (slider->state & State_On || slider->state & State_Sunken) {
-            QColor highlightColor = pal.color(QPalette::Highlight);
-            highlightColor.dark();
+            QColor highlightColor = pal.color(QPalette::Highlight).darker();
             painter->setPen(pal.color(QPalette::HighlightedText));
             painter->setBrush(highlightColor);
         } else if (slider->activeSubControls & QStyle::SC_SliderHandle) {
@@ -941,6 +949,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             painter->setBrush(pal.brush(QPalette::Window));
         }
         painter->drawRect(thumb);
+        break;
     }
     case QStyle::CC_ScrollBar:
     {
