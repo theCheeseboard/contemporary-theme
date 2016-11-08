@@ -31,6 +31,7 @@ public:
     void drawComplexControl(ComplexControl control, const QStyleOptionComplex* option, QPainter* painter, const QWidget *widget) const override;
     void drawPrimitive(PrimitiveElement primitive, const QStyleOption *option, QPainter *painter, const QWidget *widget) const override;
     QSize sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &contentsSize, const QWidget *widget) const override;
+    int pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *widget) const override;
 
     void polish(QWidget* widget) override;
 
@@ -44,7 +45,16 @@ private:
     void scheduleRepaint(const QWidget* widget, int after = 1000 / 60) const;
 
     uint indetermiateProgressSection = 0;
+    QTimer* indeterminateTimer; //Increments the indeterminateProgressSection at regular intervals
 
+    QVariant animation(QString id, QVariant retVal = "") const;
+    void putAnimation(QString type, QString id, QVariant value) const;
+    QString currentType(QString id) const;
+
+    mutable QVariantList animations;
+    mutable QStringList animationTypes;
+    mutable QStringList animationIds;
+    //mutable QMap<QString, int> currentAnimations;
 };
 
 //const QWidget* Style::selectedMenu = NULL;

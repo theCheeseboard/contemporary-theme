@@ -2,13 +2,12 @@
 
 Style::Style()
 {
-    QTimer* indeterminateTimer = new QTimer(this);
+    indeterminateTimer = new QTimer(this);
     indeterminateTimer->setInterval(1000 / 60);
     connect(indeterminateTimer, &QTimer::timeout, [=]() {
         //Yes, this can overflow - and that's good. :)
         indetermiateProgressSection += 10;
     });
-    indeterminateTimer->start();
 }
 
 Style::~Style() {
@@ -33,6 +32,11 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         if (button == NULL) return;
         QBrush brush;
         QPen textPen;
+
+        if (widget == NULL) {
+            //Sorry... :(
+            goto drawNormalButton;
+        }
 
         if (widget->property("type") == "positive") {
             if (button->state & QStyle::State_Enabled) {
@@ -73,6 +77,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             }
             textPen = col(255, 255, 255);
         } else {
+            drawNormalButton:
             if (button->features & QStyleOptionButton::Flat) {
                 brush = QBrush(pal.color(QPalette::Window));
 
@@ -274,6 +279,10 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
 
         painter->setPen(transparent);
         if (bar->maximum == 0 && bar->minimum == 0) {
+            if (!indeterminateTimer->isActive()) {
+                //Start the timer here to save CPU time if the timer is not needed.
+                indeterminateTimer->start();
+            }
             int fullWidth = barArea.width() * 4;
             int stageProgress = indetermiateProgressSection % fullWidth;
             int stage = stageProgress / barArea.width();
@@ -397,89 +406,96 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         const QStyleOptionMenuItem* item = qstyleoption_cast<const QStyleOptionMenuItem*>(option);
         if (item == NULL) return;
 
+        QString text = item->text;
+        text.remove("&");
+
         switch (item->menuItemType) {
         case QStyleOptionMenuItem::Normal:
         case QStyleOptionMenuItem::SubMenu:
         {
             bool selected;
 
-            static int menuPaintOutWidth;
+            /*static int menuPaintOutWidth;
             static int menuPaintInWidth;
             static QString selectedInMenu = "";
-            static QString selectedOutMenu = "";
+            static QString selectedOutMenu = "";*/
 
-            if (item->state & QStyle::State_Selected || item->state & QStyle::State_Sunken) {
+            int halfHeight = rect.height() / 2;
+
+            if (item->menuItemType == QStyleOptionMenuItem::SubMenu) {
                 painter->setPen(transparent);
-                selected = true;
-                if (selectedInMenu == "") {
-                    selectedInMenu = item->text;
+                QLinearGradient gradient;
+                gradient.setStart(rect.right(), 0);
+                gradient.setFinalStop(rect.right() - halfHeight, 0);
+                gradient.setColorAt(0, pal.color(QPalette::WindowText));
+                gradient.setColorAt(1, transparent);
+                painter->setBrush(QBrush(gradient));
 
+                painter->drawRect(item->rect.right() - halfHeight, item->rect.top(), halfHeight, item->rect.height());
+            }
+
+            QPen textPen;
+            if (item->state & QStyle::State_Selected || item->state & QStyle::State_Sunken) {
+                selected = true;
+                if (animation(text, 0).toInt() == 0) {
+                    putAnimation(text, "menuIn", 0);
                     QVariantAnimation* anim = new QVariantAnimation;
                     anim->setStartValue(0);
                     anim->setEndValue(rect.width());
                     anim->setDuration(100);
                     anim->setEasingCurve(QEasingCurve::OutCubic);
                     connect(anim, &QVariantAnimation::valueChanged, [=](QVariant value) {
-                        menuPaintInWidth = value.toInt();
+                        if (currentType(text) == "menuIn") {
+                            putAnimation(text, "menuIn", value.toInt());
+                        } else {
+                            anim->stop();
+                            anim->deleteLater();
+                        }
                     });
                     connect(anim, SIGNAL(valueChanged(QVariant)), widget, SLOT(repaint()));
                     connect(anim, SIGNAL(finished()), anim, SLOT(deleteLater()));
                     anim->start();
-                } else if (selectedInMenu == item->text) {
-                    painter->setBrush(pal.brush(QPalette::Highlight));
-                    painter->drawRect(rect.left(), rect.top(), menuPaintInWidth, rect.height());
                 }
-
-                painter->setPen(pal.color(QPalette::HighlightedText));
+                textPen = pal.color(QPalette::HighlightedText);
             } else {
                 selected = false;
-                if (selectedOutMenu != item->text) {
-                    if (selectedInMenu == item->text) {
-                        selectedInMenu = "";
-                        selectedOutMenu = item->text;
-
+                if (animation(text, 0).toInt() != 0) {
+                    if (currentType(text) != "menuOut") {
+                        putAnimation(text, "menuOut", animation(text, 0));
                         QVariantAnimation* anim = new QVariantAnimation;
-                        anim->setStartValue(menuPaintInWidth);
+                        anim->setStartValue(animation(text, 0).toInt());
                         anim->setEndValue(0);
-                        anim->setDuration(100);
+                        anim->setDuration((animation(text, 0).toFloat() / (float) rect.width()) * (float) 100);
                         anim->setEasingCurve(QEasingCurve::OutCubic);
                         connect(anim, &QVariantAnimation::valueChanged, [=](QVariant value) {
-                            menuPaintOutWidth = value.toInt();
+                            if (currentType(text) == "menuOut") {
+                                putAnimation(text, "menuOut", value.toInt());
+                            } else {
+                                anim->stop();
+                                anim->deleteLater();
+                            }
                         });
                         connect(anim, SIGNAL(valueChanged(QVariant)), widget, SLOT(repaint()));
                         connect(anim, SIGNAL(finished()), anim, SLOT(deleteLater()));
-                        connect(anim, &QVariantAnimation::finished, [=]() {
-                            selectedOutMenu = "";
-                        });
                         anim->start();
                     }
-                } else {
-                   painter->setBrush(pal.brush(QPalette::Highlight));
-                   painter->drawRect(rect.left(), rect.top(), menuPaintOutWidth, rect.height());
-
                 }
-                painter->setPen(pal.color(QPalette::WindowText));
+                textPen = pal.color(QPalette::WindowText);
             }
 
-            /*if (item->state & QStyle::State_Selected || item->state & QStyle::State_Sunken) {
-                selected = true;
-                painter->setPen(transparent);
-                painter->setBrush(pal.brush(QPalette::Highlight));
-                painter->drawRect(rect);
+            painter->setPen(transparent);
+            painter->setBrush(pal.brush(QPalette::Highlight));
+            int selectionWidth = animation(text, 0).toInt();
+            painter->drawRect(rect.left(), rect.top(), selectionWidth, rect.height());
 
-                painter->setPen(pal.color(QPalette::HighlightedText));
-            } else {
-                selected = false;
-                painter->setPen(pal.color(QPalette::WindowText));
-            }*/
+            painter->setPen(textPen);
 
             QRect textRect = rect;
-            if (item->menuHasCheckableItems) {
-                textRect.setLeft(textRect.height() + 4);
-            }
+            //if (item->menuHasCheckableItems) {
+            //    textRect.setLeft(textRect.height() + 4);
+            //}
 
-            QString text = item->text;
-            text.remove("&");
+            textRect.setLeft(rect.left() + 24);
 
             if (text.contains("\t")) {
                 painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, text.left(text.indexOf("\t")));
@@ -488,7 +504,47 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                 painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, text);
             }
 
-            int halfHeight = rect.height() / 2;
+            if (item->menuItemType == QStyleOptionMenuItem::SubMenu) {
+                painter->setPen(transparent);
+                painter->setBrush(pal.brush(QPalette::Window));
+
+                QPolygon triangle1;
+                triangle1.append(QPoint(rect.right(), rect.top()));
+                triangle1.append(QPoint(rect.right(), rect.top() + halfHeight));
+                triangle1.append(QPoint(rect.right() - halfHeight, rect.top()));
+                painter->drawPolygon(triangle1);
+
+                QPolygon triangle2;
+                triangle2.append(QPoint(rect.right(), rect.bottom() + 1));
+                triangle2.append(QPoint(rect.right(), rect.bottom() + 1 - halfHeight));
+                triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom() + 1));
+                painter->drawPolygon(triangle2);
+            }
+
+            if (item->checkType == QStyleOptionMenuItem::NotCheckable) {
+                if (!item->icon.isNull()) {
+                    QRect iconRect;
+                    iconRect.setLeft(4);
+                    iconRect.setTop(rect.top() + (rect.height() / 2) - 8);
+                    iconRect.setSize(QSize(16, 16));
+
+                    QIcon icon = item->icon;
+                    QImage image = icon.pixmap(16, 16).toImage();
+                    image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+                    tintImage(image, textPen.color());
+
+                    painter->drawImage(iconRect, image);
+                }
+            } else {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->setBrush(pal.brush(QPalette::Window));
+
+                QPolygon triangle;
+                triangle.append(rect.topLeft());
+                triangle.append(rect.bottomLeft());
+                triangle.append(QPoint(rect.left() + halfHeight, rect.top() + halfHeight));
+                painter->drawPolygon(triangle);
+            }
 
             if (item->checked) {
                 painter->setPen(transparent);
@@ -501,42 +557,19 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                 painter->drawPolygon(triangle);
             }
 
-            if (item->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                painter->setPen(transparent);
-                if (selected) {
-                    painter->setBrush(pal.brush(QPalette::Window));
-
-                    QPolygon triangle1;
-                    triangle1.append(QPoint(rect.right(), rect.top()));
-                    triangle1.append(QPoint(rect.right(), rect.top() + halfHeight));
-                    triangle1.append(QPoint(rect.right() - halfHeight, rect.top()));
-                    painter->drawPolygon(triangle1);
-
-                    QPolygon triangle2;
-                    triangle2.append(QPoint(rect.right(), rect.bottom() + 1));
-                    triangle2.append(QPoint(rect.right(), rect.bottom() + 1 - halfHeight));
-                    triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom() + 1));
-                    painter->drawPolygon(triangle2);
-                } else {
-                    QLinearGradient gradient;
-                    gradient.setStart(rect.right(), 0);
-                    gradient.setFinalStop(rect.right() - halfHeight, 0);
-                    gradient.setColorAt(0, pal.color(QPalette::Highlight));
-                    gradient.setColorAt(1, pal.color(QPalette::Window));
-                    painter->setBrush(QBrush(gradient));
-
-                    painter->drawRect(item->rect.right() - halfHeight, item->rect.top(), halfHeight, item->rect.height());
-                }
-
-            }
-
-
             break;
         }
         case QStyleOptionMenuItem::Separator:
         {
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(item->rect.topLeft(), item->rect.topRight());
+            if (text == "") {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawLine(item->rect.topLeft(), item->rect.topRight());
+            } else {
+                painter->setBrush(pal.color(QPalette::WindowText));
+                painter->drawRect(rect);
+                painter->setPen(pal.color(QPalette::Window));
+                painter->drawText(rect, Qt::AlignCenter, text);
+            }
             break;
         }
         case QStyleOptionMenuItem::Margin:
@@ -664,6 +697,63 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     {
         painter->setBrush(pal.color(QPalette::Window));
         painter->drawRect(rect);
+    }
+    case QStyle::CE_SizeGrip:
+    {
+        QPolygon triangle;
+        triangle.append(rect.bottomRight());
+        triangle.append(QPoint(rect.bottom() - 8, rect.right()));
+        triangle.append(QPoint(rect.bottom(), rect.right() - 8));
+
+        painter->setBrush(pal.brush(QPalette::WindowText));
+        painter->drawPolygon(triangle);
+    }
+    case QStyle::CE_ItemViewItem:
+    {
+        const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
+        if (item == NULL) return;
+
+        painter->setPen(transparent);
+
+        QPen textPen;
+        if (option->state & QStyle::State_Selected) {
+            painter->setBrush(pal.brush(QPalette::Highlight));
+            textPen = pal.color(QPalette::HighlightedText);
+            //painter->setPen(pal.color(QPalette::HighlightedText));
+        } else if (option->state & QStyle::State_MouseOver) {
+            QColor col = pal.color(QPalette::Highlight);
+            col.setAlpha(127);
+            painter->setBrush(col);
+            textPen = pal.color(QPalette::HighlightedText);
+        } else {
+            painter->setBrush(pal.brush(QPalette::Window));
+            textPen = pal.color(QPalette::WindowText);
+
+            //painter->setPen(pal.color(QPalette::WindowText));
+        }
+        painter->drawRect(rect);
+
+        painter->setBrush(item->backgroundBrush);
+        painter->drawRect(rect);
+
+        QRect iconRect, textRect = rect;
+
+        textRect.setHeight(rect.height() - 2);
+        if (!item->icon.isNull()) {
+            iconRect.setSize(((QAbstractItemView*) widget)->iconSize());
+            QIcon icon = item->icon;
+            QImage iconImage = icon.pixmap(iconRect.size()).toImage();
+            iconRect.moveLeft(rect.left() + 2);
+            iconRect.moveTop(rect.top() + (rect.height() / 2) - (iconRect.height() / 2));
+            painter->drawImage(iconRect, iconImage);
+            textRect.setLeft(iconRect.right() + 6);
+        } else {
+            textRect.setLeft(rect.left() + 6);
+        }
+
+        painter->setPen(textPen);
+        painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, item->text);
+        break;
     }
     case QStyle::CE_MenuBarEmptyArea:
     case QStyle::CE_RadioButtonLabel:
@@ -861,12 +951,16 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
                 //textRect.moveLeft(iconRect.right());
             }
 
-
             textRect.setLeft(rect.left() + (rect.width() / 2) - (button->fontMetrics.width(text) / 2));
             textRect.setWidth(button->fontMetrics.width(text));
             //textRect.setTop(rect.top() + (rect.height() / 2) - (button->fontMetrics.height() / 2));
             textRect.setTop(iconRect.bottom());
             textRect.setHeight(button->fontMetrics.height());
+
+            //Move each rectangle up a little
+            iconRect.moveTop(iconRect.top() - (button->fontMetrics.height() / 2));
+            textRect.moveTop(textRect.top() - (button->fontMetrics.height() / 2));
+            break;
         }
         case Qt::ToolButtonTextOnly:
         {
@@ -964,6 +1058,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
 }
 
 void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
+
     QPalette pal = option->palette;
     QRect rect = option->rect;
 
@@ -1004,13 +1099,13 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         } else {
             painter->setPen(pal.color(QPalette::Disabled, QPalette::WindowText));
         }
+
         painter->drawLine(rect.topLeft(), rect.bottomLeft());
         painter->drawLine(rect.bottomLeft(), rect.bottomRight());
         break;
     }
     case QStyle::PE_PanelMenu:
     {
-
         painter->setBrush(pal.brush(QPalette::Window));
         painter->setPen(transparent);
         painter->drawRect(option->rect);
@@ -1052,8 +1147,18 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         painter->drawLine(rect.topLeft(), rect.bottomLeft());
         break;
     }
-    case QStyle::PE_IndicatorArrowDown:
+    case PE_IndicatorTabTearRight:
+    {
+        painter->setPen(pal.color(QPalette::WindowText));
+        painter->drawLine(rect.topRight(), rect.bottomRight());
+        break;
+    }
     case QStyle::PE_IndicatorArrowRight:
+    case QStyle::PE_IndicatorArrowLeft:
+    case QStyle::PE_IndicatorArrowDown:
+    case QStyle::PE_IndicatorArrowUp:
+    case QStyle::PE_IndicatorSpinDown:
+    case QStyle::PE_IndicatorSpinUp:
     {
         painter->setBrush(pal.color(QPalette::WindowText));
 
@@ -1062,9 +1167,9 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             image = QIcon::fromTheme("go-next").pixmap(16, 16).toImage();
         } else if (primitive == QStyle::PE_IndicatorArrowLeft) {
             image = QIcon::fromTheme("go-previous").pixmap(16, 16).toImage();
-        } else if (primitive == QStyle::PE_IndicatorArrowDown) {
+        } else if (primitive == QStyle::PE_IndicatorArrowDown || primitive == QStyle::PE_IndicatorSpinDown) {
             image = QIcon::fromTheme("go-down").pixmap(16, 16).toImage();
-        } else if (primitive == QStyle::PE_IndicatorArrowUp) {
+        } else if (primitive == QStyle::PE_IndicatorArrowUp || primitive == QStyle::PE_IndicatorSpinUp) {
             image = QIcon::fromTheme("go-up").pixmap(16, 16).toImage();
         }
         tintImage(image, pal.color(QPalette::WindowText));
@@ -1124,32 +1229,9 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         break;
     }
     case QStyle::PE_PanelItemViewItem:
-    //case QStyle::PE_PanelItemViewRow:
+    case QStyle::PE_PanelItemViewRow:
     {
-        const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
-        if (item == NULL) return;
-
-        QPen textPen;
-        if (option->state & QStyle::State_Selected) {
-            painter->setBrush(pal.brush(QPalette::Highlight));
-            textPen = pal.color(QPalette::HighlightedText);
-            //painter->setPen(pal.color(QPalette::HighlightedText));
-        } else if (option->state & QStyle::State_MouseOver) {
-            QColor col = pal.color(QPalette::Highlight);
-            col.setAlpha(127);
-            painter->setBrush(col);
-            textPen = pal.color(QPalette::HighlightedText);
-        } else {
-            painter->setBrush(pal.brush(QPalette::Window));
-            textPen = pal.color(QPalette::WindowText);
-            //painter->setPen(pal.color(QPalette::WindowText));
-        }
-        painter->drawRect(rect);
-
-        //Not sure why this works
-        //If we draw the actual text we get duplicate text.
-        painter->setPen(textPen);
-        painter->drawText(rect, "");
+        this->drawControl(CE_ItemViewItem, option, painter, widget);
         break;
     }
     case QStyle::PE_IndicatorMenuCheckMark:
@@ -1169,6 +1251,96 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         painter->drawPolygon(triangle2);
         break;
     }
+    case QStyle::PE_PanelTipLabel:
+    {
+        painter->setBrush(pal.brush(QPalette::Window));
+        painter->drawRect(rect);
+    }
+    case QStyle::PE_PanelStatusBar:
+    {
+        painter->setPen(pal.color(QPalette::WindowText));
+        painter->drawLine(rect.topLeft(), rect.topRight());
+        break;
+    }
+    case QStyle::PE_PanelButtonCommand:
+    {
+        const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
+        if (button == NULL) return;
+        QBrush brush;
+        QPen textPen;
+
+        if (widget == NULL) {
+            //Sorry... :(
+            goto drawNormalButton;
+        }
+
+        if (widget->property("type") == "positive") {
+            if (button->state & QStyle::State_Enabled) {
+                brush = QBrush(col(0, 200, 0));
+            } else {
+                brush = QBrush(col(67, 67, 67));
+            }
+
+            if (button->state & QStyle::State_HasFocus) {
+                brush = QBrush(col(0, 225, 0));
+            }
+
+            if (button->state & QStyle::State_MouseOver) {
+                brush = QBrush(col(0, 250, 0));
+            }
+
+            if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+                brush = QBrush(col(0, 150, 0));
+            }
+            textPen = QColor(0, 0, 0);
+        } else if (widget->property("type") == "destructive") {
+            if (button->state & QStyle::State_Enabled) {
+                brush = QBrush(col(200, 0, 0));
+            } else {
+                brush = QBrush(col(67, 67, 67));
+            }
+
+            if (button->state & QStyle::State_HasFocus) {
+                brush = QBrush(col(225, 0, 0));
+            }
+
+            if (button->state & QStyle::State_MouseOver) {
+                brush = QBrush(col(250, 0, 0));
+            }
+
+            if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+                brush = QBrush(col(150, 0, 0));
+            }
+            textPen = col(255, 255, 255);
+        } else {
+            drawNormalButton:
+            brush = QBrush(pal.color(QPalette::Window));
+
+            if (button->state & QStyle::State_MouseOver) {
+                brush = QBrush(pal.color(QPalette::Window).lighter());
+            }
+
+            if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+                brush = QBrush(pal.color(QPalette::Window).darker());
+            }
+            textPen = pal.color(QPalette::WindowText);
+        }
+
+        painter->setBrush(brush);
+        painter->drawRect(rect);
+        break;
+    }
+    case QStyle::PE_PanelButtonBevel:
+    case QStyle::PE_PanelMenuBar:
+    case QStyle::PE_FrameMenu:
+    case PE_FrameFocusRect:
+    {
+        //Don't do anything.
+        break;
+    }
+    default:
+        qDebug() << "Style not handled:" << primitive;
+        QCommonStyle::drawPrimitive(primitive, option, painter, widget);
     }
 }
 
@@ -1198,7 +1370,7 @@ QStyle::SubControl Style::hitTestComplexControl(ComplexControl cc, const QStyleO
         }
     }
     }
-    return QStyle::SC_None;
+    return QCommonStyle::hitTestComplexControl(cc, option, pt, w);
 }
 
 void Style::polish(QWidget *widget) {
@@ -1266,6 +1438,25 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
         size.setWidth(contentsSize.width() + 10);
         return size;
     }
+    case CT_ProgressBar:
+    {
+        size.setHeight(10);
+        return size;
+    }
+    case CT_MenuItem:
+    {
+        const QStyleOptionMenuItem* item = qstyleoption_cast<const QStyleOptionMenuItem*>(opt);
+        if (item == NULL) return size;
+
+        if (item->menuItemType == QStyleOptionMenuItem::Normal ||
+                (item->menuItemType == QStyleOptionMenuItem::Separator && item->text != "")) {
+            size.setHeight(item->fontMetrics.height() + 6);
+            size.setWidth(item->fontMetrics.width(item->text) + 28);
+        } else {
+            size = QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
+        }
+        return size;
+    }
     default:
         return QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
     }
@@ -1282,6 +1473,7 @@ int Style::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w, QS
     case QStyle::SH_Menu_SupportsSections:
     case QStyle::SH_Slider_StopMouseOverSlider:
     case QStyle::SH_Widget_Animate:
+    case QStyle::SH_ComboBox_Popup:
         return true;
     case QStyle::SH_ItemView_ScrollMode:
         return QAbstractItemView::ScrollPerPixel;
@@ -1324,5 +1516,58 @@ void Style::tintImage(QImage &image, QColor tint) const {
         painter.setCompositionMode(QPainter::CompositionMode_SourceAtop);
         painter.fillRect(0, 0, image.width(), image.height(), tint);
         painter.end();
+    }
+}
+
+QVariant Style::animation(QString id, QVariant retVal) const {
+    if (animationIds.contains(id)) {
+        return animations.at(animationIds.indexOf(id));
+    } else {
+        return retVal;
+    }
+}
+
+void Style::putAnimation(QString id, QString type, QVariant value) const {
+    if (animationIds.contains(id)) {
+        animations.replace(animationIds.indexOf(id), value);
+        animationTypes.replace(animationIds.indexOf(id), type);
+    } else {
+        animationIds.append(id);
+        animations.append(value);
+        animationTypes.append(type);
+    }
+}
+
+QString Style::currentType(QString id) const {
+    if (animationIds.contains(id)) {
+        return animationTypes.at(animationIds.indexOf(id));
+    } else {
+        return "";
+    }
+}
+
+int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *widget) const {
+    switch (m) {
+    case PM_MessageBoxIconSize:
+        return 64;
+    case PM_SubMenuOverlap:
+        return 2;
+    case PM_MenuPanelWidth:
+    case PM_MenuBarItemSpacing:
+    case PM_MenuBarPanelWidth:
+
+    case PM_TabBarTabShiftHorizontal:
+    case PM_TabBarTabShiftVertical:
+        return 0;
+    case PM_MenuHMargin:
+    case PM_MenuVMargin:
+        return 1;
+    case PM_CheckBoxLabelSpacing:
+    case PM_RadioButtonLabelSpacing:
+        return 4;
+    case PM_ToolBarIconSize:
+        return 16;
+    default:
+        return QCommonStyle::pixelMetric(m, opt, widget);
     }
 }
