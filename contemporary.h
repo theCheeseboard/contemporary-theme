@@ -32,6 +32,8 @@ public:
     void drawPrimitive(PrimitiveElement primitive, const QStyleOption *option, QPainter *painter, const QWidget *widget) const override;
     QSize sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &contentsSize, const QWidget *widget) const override;
     int pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *widget) const override;
+    QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *opt, const QWidget *widget) const override;
+    void drawItemText(QPainter* painter, const QRect &rect, int alignment, const QPalette &palette, bool enabled, const QString &text, QPalette::ColorRole textRole) const override;
 
     void polish(QWidget* widget) override;
 

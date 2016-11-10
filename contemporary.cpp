@@ -78,7 +78,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             textPen = col(255, 255, 255);
         } else {
             drawNormalButton:
-            if (button->features & QStyleOptionButton::Flat) {
+            if (button->features & QStyleOptionButton::Flat || (widget != NULL && widget->property("flatContemporary").toBool())) {
                 brush = QBrush(pal.color(QPalette::Window));
 
                 if (button->state & QStyle::State_MouseOver) {
@@ -736,13 +736,15 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         painter->setBrush(item->backgroundBrush);
         painter->drawRect(rect);
 
-        QRect iconRect, textRect = rect;
+        QRect iconRect = rect, textRect = rect;
 
         textRect.setHeight(rect.height() - 2);
         if (!item->icon.isNull()) {
-            iconRect.setSize(((QAbstractItemView*) widget)->iconSize());
+            //QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
+            QSize iconSize(16, 16);
+            iconRect.setSize(iconSize);
             QIcon icon = item->icon;
-            QImage iconImage = icon.pixmap(iconRect.size()).toImage();
+            QImage iconImage = icon.pixmap(iconSize).toImage();
             iconRect.moveLeft(rect.left() + 2);
             iconRect.moveTop(rect.top() + (rect.height() / 2) - (iconRect.height() / 2));
             painter->drawImage(iconRect, iconImage);
@@ -1231,7 +1233,52 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
     case QStyle::PE_PanelItemViewItem:
     case QStyle::PE_PanelItemViewRow:
     {
-        this->drawControl(CE_ItemViewItem, option, painter, widget);
+        //this->drawControl(CE_ItemViewItem, option, painter, widget);
+
+        const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
+        if (item == NULL) return;
+
+        painter->setPen(transparent);
+
+        QPen textPen;
+        if (option->state & QStyle::State_Selected) {
+            painter->setBrush(pal.brush(QPalette::Highlight));
+            textPen = pal.color(QPalette::HighlightedText);
+            //painter->setPen(pal.color(QPalette::HighlightedText));
+        } else if (option->state & QStyle::State_MouseOver) {
+            QColor col = pal.color(QPalette::Highlight);
+            col.setAlpha(127);
+            painter->setBrush(col);
+            textPen = pal.color(QPalette::HighlightedText);
+        } else {
+            painter->setBrush(pal.brush(QPalette::Window));
+            textPen = pal.color(QPalette::WindowText);
+
+            //painter->setPen(pal.color(QPalette::WindowText));
+        }
+        painter->drawRect(rect);
+
+        painter->setBrush(item->backgroundBrush);
+        painter->drawRect(rect);
+
+        QRect iconRect, textRect = rect;
+
+        textRect.setHeight(rect.height() - 2);
+        if (!item->icon.isNull()) {
+            iconRect.setSize(((QAbstractItemView*) widget)->iconSize());
+            QIcon icon = item->icon;
+            QImage iconImage = icon.pixmap(iconRect.size()).toImage();
+            iconRect.moveLeft(rect.left() + 2);
+            iconRect.moveTop(rect.top() + (rect.height() / 2) - (iconRect.height() / 2));
+            painter->drawImage(iconRect, iconImage);
+            textRect.setLeft(iconRect.right() + 6);
+        } else {
+            textRect.setLeft(rect.left() + 6);
+        }
+
+
+        painter->setPen(textPen);
+        painter->drawText(rect, "");
         break;
     }
     case QStyle::PE_IndicatorMenuCheckMark:
@@ -1473,10 +1520,17 @@ int Style::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w, QS
     case QStyle::SH_Menu_SupportsSections:
     case QStyle::SH_Slider_StopMouseOverSlider:
     case QStyle::SH_Widget_Animate:
-    case QStyle::SH_ComboBox_Popup:
+    case QStyle::SH_Menu_KeyboardSearch:
+    case QStyle::SH_DialogButtonBox_ButtonsHaveIcons:
         return true;
+    case QStyle::SH_MessageBox_CenterButtons:
+    case QStyle::SH_Slider_SnapToValue:
+        return false;
     case QStyle::SH_ItemView_ScrollMode:
         return QAbstractItemView::ScrollPerPixel;
+    case QStyle::SH_LineEdit_PasswordMaskDelay:
+    case QStyle::SH_Menu_SubMenuPopupDelay:
+        return 0;
     default:
         return QCommonStyle::styleHint(sh, opt, w, shret);
     }
@@ -1570,4 +1624,17 @@ int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *wi
     default:
         return QCommonStyle::pixelMetric(m, opt, widget);
     }
+}
+
+QIcon Style::standardIcon(StandardPixmap standardIcon, const QStyleOption *opt, const QWidget *widget) const {
+    switch (standardIcon) {
+    case QStyle::SP_DialogNoButton:
+        return QIcon::fromTheme("dialog-cancel");
+    default:
+        return QCommonStyle::standardIcon(standardIcon, opt, widget);
+    }
+}
+
+void Style::drawItemText(QPainter *painter, const QRect &rect, int alignment, const QPalette &palette, bool enabled, const QString &text, QPalette::ColorRole textRole) const {
+    QCommonStyle::drawItemText(painter, rect, alignment, palette, enabled, text, textRole);
 }
