@@ -19,6 +19,7 @@
 #include <QComboBox>
 #include <QToolButton>
 #include <QRadioButton>
+#include <QSettings>
 
 class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle
 {
@@ -56,6 +57,8 @@ private:
     mutable QVariantList animations;
     mutable QStringList animationTypes;
     mutable QStringList animationIds;
+
+    QSettings* settings;
     //mutable QMap<QString, int> currentAnimations;
 };
 

@@ -2,6 +2,7 @@
 
 Style::Style()
 {
+    settings = new QSettings("theSuite", "contemporary_widget", this);
     indeterminateTimer = new QTimer(this);
     indeterminateTimer->setInterval(1000 / 60);
     connect(indeterminateTimer, &QTimer::timeout, [=]() {
@@ -496,10 +497,24 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             //}
 
             textRect.setLeft(rect.left() + 24);
+            textRect.setRight(rect.right() - 4);
 
             if (text.contains("\t")) {
+                QString keyText = text.mid(text.indexOf("\t"));
+                if (settings->value("keyboard/isApple", false).toBool()) {
+                    keyText.replace("Ctrl+", "^");
+                    keyText.replace("Alt+", "⌥");
+                    keyText.replace("Meta+", "⌘");
+                } else {
+                    keyText.replace("Ctrl+", "⎈");
+                    keyText.replace("Alt+", "⎇");
+                    keyText.replace("Meta+", "❖");
+                }
+                keyText.replace("Shift+", "⇧");
+                keyText.replace("Esc", "⎋");
+                keyText.replace("Tab", "⇄");
                 painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, text.left(text.indexOf("\t")));
-                painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignRight, text.mid(text.indexOf("\t")));
+                painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignRight, keyText);
             } else {
                 painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, text);
             }
@@ -1096,6 +1111,8 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
     }*/
     case QStyle::PE_PanelLineEdit:
     {
+        painter->setBrush(pal.brush(QPalette::Window));
+        painter->drawRect(rect);
         if (option->state & QStyle::State_Enabled) {
             painter->setPen(pal.color(QPalette::WindowText));
         } else {
@@ -1469,7 +1486,11 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
     }
     case CT_ItemViewItem:
     {
+        const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt);
+        if (item == NULL) return size;
+
         size.setHeight(opt->fontMetrics.height() + 6);
+        size.setWidth(opt->fontMetrics.width(item->text) + (item->icon.isNull() ? 0 : 16) + 16);
         return size;
     }
     case CT_PushButton:
@@ -1612,6 +1633,8 @@ int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *wi
 
     case PM_TabBarTabShiftHorizontal:
     case PM_TabBarTabShiftVertical:
+
+    case PM_ToolBarItemMargin:
         return 0;
     case PM_MenuHMargin:
     case PM_MenuVMargin:
