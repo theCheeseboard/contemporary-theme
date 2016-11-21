@@ -1403,7 +1403,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         break;
     }
     default:
-        qDebug() << "Style not handled:" << primitive;
+        //qDebug() << "Style not handled:" << primitive;
         QCommonStyle::drawPrimitive(primitive, option, painter, widget);
     }
 }
