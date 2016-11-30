@@ -1030,6 +1030,12 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         const QStyleOptionSlider* slider = qstyleoption_cast<const QStyleOptionSlider*>(option);
         if (slider == NULL) return;
 
+        //Adjust rectangle to be only 10px tall if it is larger.
+        if (rect.height() > 16) {
+            int reduction = (rect.height() - 16) / 2;
+            rect.adjust(0, reduction, 0, -reduction);
+        }
+
         //Draw border
         painter->setPen(pal.color(QPalette::WindowText));
         painter->setBrush(pal.color(QPalette::Window));
@@ -1439,7 +1445,10 @@ QStyle::SubControl Style::hitTestComplexControl(ComplexControl cc, const QStyleO
 
 void Style::polish(QWidget *widget) {
     if (widget == NULL) return;
-    if (qobject_cast<QPushButton*>(widget) ||
+    if (qobject_cast<QCommandLinkButton*>(widget)) {
+        widget->setAttribute(Qt::WA_Hover);
+        widget->setAttribute(Qt::WA_StyledBackground);
+    } else if (qobject_cast<QPushButton*>(widget) ||
             qobject_cast<QCheckBox*>(widget) ||
             qobject_cast<QComboBox*>(widget) ||
             qobject_cast<QToolButton*>(widget) ||
@@ -1644,6 +1653,8 @@ int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *wi
         return 4;
     case PM_ToolBarIconSize:
         return 16;
+    case PM_SliderControlThickness:
+        return 16;
     default:
         return QCommonStyle::pixelMetric(m, opt, widget);
     }
@@ -1659,5 +1670,7 @@ QIcon Style::standardIcon(StandardPixmap standardIcon, const QStyleOption *opt, 
 }
 
 void Style::drawItemText(QPainter *painter, const QRect &rect, int alignment, const QPalette &palette, bool enabled, const QString &text, QPalette::ColorRole textRole) const {
+    //painter->setPen(palette.color(enabled ? QPalette::Normal : QPalette::Disabled, textRole));
+    //painter->drawText(rect, alignment, text);
     QCommonStyle::drawItemText(painter, rect, alignment, palette, enabled, text, textRole);
 }

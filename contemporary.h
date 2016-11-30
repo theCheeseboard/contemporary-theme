@@ -20,6 +20,7 @@
 #include <QToolButton>
 #include <QRadioButton>
 #include <QSettings>
+#include <QCommandLinkButton>
 
 class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle
 {
