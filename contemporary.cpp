@@ -743,8 +743,6 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         } else {
             painter->setBrush(pal.brush(QPalette::Window));
             textPen = pal.color(QPalette::WindowText);
-
-            //painter->setPen(pal.color(QPalette::WindowText));
         }
         painter->drawRect(rect);
 
@@ -769,7 +767,23 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         }
 
         painter->setPen(textPen);
+        painter->setFont(item->font);
         painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, item->text);
+        break;
+    }
+    case QStyle::CE_DockWidgetTitle:
+    {
+        const QStyleOptionDockWidget* title = qstyleoption_cast<const QStyleOptionDockWidget*>(option);
+        if (title == NULL) return;
+
+        QString text = title->title;
+        text.remove("&");
+
+        QRect textRect = rect;
+        textRect.adjust(4, 0, 0, 0);
+
+        painter->setPen(pal.color(QPalette::WindowText));
+        painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, text);
         break;
     }
     case QStyle::CE_MenuBarEmptyArea:
@@ -1073,6 +1087,8 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         //Draw background
         painter->setBrush(pal.brush(QPalette::Window));
         painter->drawRect(rect);
+        QCommonStyle::drawComplexControl(control, option, painter, widget);
+        break;
     }
     default:
         QCommonStyle::drawComplexControl(control, option, painter, widget);
@@ -1096,6 +1112,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
     switch (primitive) {
     case QStyle::PE_FrameGroupBox:
     case QStyle::PE_FrameTabWidget:
+    case QStyle::PE_FrameDockWidget:
     {
         painter->setPen(pal.color(QPalette::WindowText));
         painter->drawRect(rect.adjusted(0, 0, -1, -1));
@@ -1400,6 +1417,35 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         painter->drawRect(rect);
         break;
     }
+    /*case QStyle::PE_FrameButtonTool:
+    case QStyle::PE_PanelButtonTool:
+    {
+        const QStyleOptionToolBox* button = qstyleoption_cast<const QStyleOptionToolBox*>(option);
+        if (button == NULL) return;
+
+        QBrush brush = QBrush(pal.color(QPalette::Window));
+        QPen textPen;
+
+        if (button->state & QStyle::State_MouseOver) {
+            brush = QBrush(pal.color(QPalette::Window).lighter());
+        }
+
+        if (button->state & QStyle::State_Sunken) {
+            brush = QBrush(pal.color(QPalette::Window).darker());
+        }
+
+        if (button->state & QStyle::State_On) {
+            brush = QBrush(pal.color(QPalette::Highlight));
+        }
+
+        textPen = pal.color(QPalette::WindowText);
+
+        painter->setBrush(brush);
+        painter->drawRect(rect);
+
+        //painter->drawText(rect, Qt::AlignCenter, button->text);
+        break;
+    }*/
     case QStyle::PE_PanelButtonBevel:
     case QStyle::PE_PanelMenuBar:
     case QStyle::PE_FrameMenu:
@@ -1498,8 +1544,10 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
         const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt);
         if (item == NULL) return size;
 
+        QString text = item->text;
+
         size.setHeight(opt->fontMetrics.height() + 6);
-        size.setWidth(opt->fontMetrics.width(item->text) + (item->icon.isNull() ? 0 : 16) + 16);
+        size.setWidth(opt->fontMetrics.width(text) + (item->icon.isNull() ? 0 : 16) + 16);
         return size;
     }
     case CT_PushButton:
@@ -1635,7 +1683,7 @@ int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *wi
     case PM_MessageBoxIconSize:
         return 64;
     case PM_SubMenuOverlap:
-        return 2;
+        return 0;
     case PM_MenuPanelWidth:
     case PM_MenuBarItemSpacing:
     case PM_MenuBarPanelWidth:
@@ -1652,9 +1700,10 @@ int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *wi
     case PM_RadioButtonLabelSpacing:
         return 4;
     case PM_ToolBarIconSize:
-        return 16;
     case PM_SliderControlThickness:
         return 16;
+    case PM_ScrollView_ScrollBarOverlap:
+        return 5;
     default:
         return QCommonStyle::pixelMetric(m, opt, widget);
     }
@@ -1664,6 +1713,8 @@ QIcon Style::standardIcon(StandardPixmap standardIcon, const QStyleOption *opt, 
     switch (standardIcon) {
     case QStyle::SP_DialogNoButton:
         return QIcon::fromTheme("dialog-cancel");
+    case QStyle::SP_TitleBarCloseButton:
+        return QIcon::fromTheme("window-close");
     default:
         return QCommonStyle::standardIcon(standardIcon, opt, widget);
     }
