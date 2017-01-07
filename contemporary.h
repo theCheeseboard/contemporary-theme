@@ -8,7 +8,7 @@
 #include <QDebug>
 #include <QTimer>
 #include <QGraphicsColorizeEffect>
-#include <QVariantAnimation>
+#include <tvariantanimation.h>
 
 //Include controls
 #include <QPushButton>

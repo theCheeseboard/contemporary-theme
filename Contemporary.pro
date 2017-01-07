@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += widgets
+QT       += widgets thelib
 CONFIG   += c++11
 
 TARGET = Contemporary

@@ -4,11 +4,28 @@ Style::Style()
 {
     settings = new QSettings("theSuite", "contemporary_widget", this);
     indeterminateTimer = new QTimer(this);
-    indeterminateTimer->setInterval(1000 / 60);
+    if (theLibsGlobal::instance()->powerStretchEnabled()) {
+        indeterminateTimer->setInterval(1000 / 5);
+    } else {
+        indeterminateTimer->setInterval(1000 / 60);
+    }
     connect(indeterminateTimer, &QTimer::timeout, [=]() {
         //Yes, this can overflow - and that's good. :)
-        indetermiateProgressSection += 10;
+        if (theLibsGlobal::instance()->powerStretchEnabled()) {
+            indetermiateProgressSection += 120;
+        } else {
+            indetermiateProgressSection += 10;
+        }
     });
+
+    connect(theLibsGlobal::instance(), &theLibsGlobal::powerStretchChanged, [=](bool isOn) {
+        if (isOn) {
+            indeterminateTimer->setInterval(1000 / 5);
+        } else {
+            indeterminateTimer->setInterval(1000 / 60);
+        }
+    });
+
 }
 
 Style::~Style() {
@@ -351,12 +368,12 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             if (selectedInMenu == "") {
                 selectedInMenu = item->text;
 
-                QVariantAnimation* anim = new QVariantAnimation;
+                tVariantAnimation* anim = new tVariantAnimation;
                 anim->setStartValue(0);
                 anim->setEndValue(rect.height());
                 anim->setDuration(100);
                 anim->setEasingCurve(QEasingCurve::OutCubic);
-                connect(anim, &QVariantAnimation::valueChanged, [=](QVariant value) {
+                connect(anim, &tVariantAnimation::valueChanged, [=](QVariant value) {
                     menuPaintInHeight = value.toInt();
                 });
                 connect(anim, SIGNAL(valueChanged(QVariant)), widget, SLOT(repaint()));
@@ -374,17 +391,17 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                     selectedInMenu = "";
                     selectedOutMenu = item->text;
 
-                    QVariantAnimation* anim = new QVariantAnimation;
+                    tVariantAnimation* anim = new tVariantAnimation;
                     anim->setStartValue(menuPaintInHeight);
                     anim->setEndValue(0);
                     anim->setDuration(100);
                     anim->setEasingCurve(QEasingCurve::OutCubic);
-                    connect(anim, &QVariantAnimation::valueChanged, [=](QVariant value) {
+                    connect(anim, &tVariantAnimation::valueChanged, [=](QVariant value) {
                         menuPaintOutHeight = value.toInt();
                     });
                     connect(anim, SIGNAL(valueChanged(QVariant)), widget, SLOT(repaint()));
                     connect(anim, SIGNAL(finished()), anim, SLOT(deleteLater()));
-                    connect(anim, &QVariantAnimation::finished, [=]() {
+                    connect(anim, &tVariantAnimation::finished, [=]() {
                         selectedOutMenu = "";
                     });
                     anim->start();
@@ -392,7 +409,6 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             } else {
                painter->setBrush(pal.brush(QPalette::Highlight));
                painter->drawRect(rect.left(), rect.top(), rect.width(), menuPaintOutHeight);
-
             }
             painter->setPen(pal.color(QPalette::WindowText));
         }
@@ -440,12 +456,12 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                 selected = true;
                 if (animation(text, 0).toInt() == 0) {
                     putAnimation(text, "menuIn", 0);
-                    QVariantAnimation* anim = new QVariantAnimation;
+                    tVariantAnimation* anim = new tVariantAnimation;
                     anim->setStartValue(0);
                     anim->setEndValue(rect.width());
                     anim->setDuration(100);
                     anim->setEasingCurve(QEasingCurve::OutCubic);
-                    connect(anim, &QVariantAnimation::valueChanged, [=](QVariant value) {
+                    connect(anim, &tVariantAnimation::valueChanged, [=](QVariant value) {
                         if (currentType(text) == "menuIn") {
                             putAnimation(text, "menuIn", value.toInt());
                         } else {
@@ -463,12 +479,12 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                 if (animation(text, 0).toInt() != 0) {
                     if (currentType(text) != "menuOut") {
                         putAnimation(text, "menuOut", animation(text, 0));
-                        QVariantAnimation* anim = new QVariantAnimation;
+                        tVariantAnimation* anim = new tVariantAnimation;
                         anim->setStartValue(animation(text, 0).toInt());
                         anim->setEndValue(0);
                         anim->setDuration((animation(text, 0).toFloat() / (float) rect.width()) * (float) 100);
                         anim->setEasingCurve(QEasingCurve::OutCubic);
-                        connect(anim, &QVariantAnimation::valueChanged, [=](QVariant value) {
+                        connect(anim, &tVariantAnimation::valueChanged, [=](QVariant value) {
                             if (currentType(text) == "menuOut") {
                                 putAnimation(text, "menuOut", value.toInt());
                             } else {
