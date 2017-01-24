@@ -25,11 +25,10 @@ Style::Style()
             indeterminateTimer->setInterval(1000 / 60);
         }
     });
-
 }
 
 Style::~Style() {
-
+    theLibsGlobal::instance()->disconnect();
 }
 
 void Style::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
@@ -769,8 +768,11 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
 
         textRect.setHeight(rect.height() - 2);
         if (!item->icon.isNull()) {
-            //QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
-            QSize iconSize(16, 16);
+            QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
+            //QSize iconSize(16, 16);
+            if (!iconSize.isValid()) {
+                iconSize = QSize(16, 16);
+            }
             iconRect.setSize(iconSize);
             QIcon icon = item->icon;
             QImage iconImage = icon.pixmap(iconSize).toImage();
@@ -1126,353 +1128,382 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
     int halfWidth = rect.width() / 2;
 
     switch (primitive) {
-    case QStyle::PE_FrameGroupBox:
-    case QStyle::PE_FrameTabWidget:
-    case QStyle::PE_FrameDockWidget:
-    {
-        painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawRect(rect.adjusted(0, 0, -1, -1));
-        break;
-    }
-    case QStyle::PE_FrameTabBarBase:
-    {
-        painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-        break;
-    }
-    /*case QStyle::PE_FrameTabWidget:
-    {
-        painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawLine(rect.topLeft(), rect.bottomLeft());
-        painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-        painter->drawLine(rect.bottomRight(), rect.topRight());
-        break;
-    }*/
-    case QStyle::PE_PanelLineEdit:
-    {
-        painter->setBrush(pal.brush(QPalette::Window));
-        painter->drawRect(rect);
-        if (option->state & QStyle::State_Enabled) {
+        case QStyle::PE_FrameGroupBox:
+        case QStyle::PE_FrameTabWidget:
+        case QStyle::PE_FrameDockWidget:
+        {
             painter->setPen(pal.color(QPalette::WindowText));
-        } else {
-            painter->setPen(pal.color(QPalette::Disabled, QPalette::WindowText));
+            painter->drawRect(rect.adjusted(0, 0, -1, -1));
+            break;
         }
-
-        painter->drawLine(rect.topLeft(), rect.bottomLeft());
-        painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-        break;
-    }
-    case QStyle::PE_PanelMenu:
-    {
-        painter->setBrush(pal.brush(QPalette::Window));
-        painter->setPen(transparent);
-        painter->drawRect(option->rect);
-
-        painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawLine(option->rect.topLeft(), option->rect.bottomLeft());
-        painter->drawLine(option->rect.bottomLeft(), option->rect.bottomRight());
-        painter->drawLine(option->rect.bottomRight(), option->rect.topRight());
-        painter->drawLine(option->rect.topRight(), option->rect.topLeft());
-        break;
-    }
-    case QStyle::PE_IndicatorTabClose:
-    {
-        QBrush brush;
-        if (option->state & QStyle::State_Enabled) {
-            brush = QBrush(col(200, 0, 0));
-        } else {
-            brush = QBrush(col(67, 67, 67));
-        }
-
-        if (option->state & QStyle::State_MouseOver) {
-            brush = QBrush(col(250, 0, 0));
-        }
-
-        if (option->state & QStyle::State_Sunken) {
-            brush = QBrush(col(150, 0, 0));
-        }
-
-        QRect closeButtonRect = rect;
-        //closeButtonRect.adjust(3, 3, -3, -3);
-
-        painter->setBrush(brush);
-        painter->drawEllipse(closeButtonRect);
-        break;
-    }
-    case PE_IndicatorTabTearLeft:
-    {
-        painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawLine(rect.topLeft(), rect.bottomLeft());
-        break;
-    }
-    case PE_IndicatorTabTearRight:
-    {
-        painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawLine(rect.topRight(), rect.bottomRight());
-        break;
-    }
-    case QStyle::PE_IndicatorArrowRight:
-    case QStyle::PE_IndicatorArrowLeft:
-    case QStyle::PE_IndicatorArrowDown:
-    case QStyle::PE_IndicatorArrowUp:
-    case QStyle::PE_IndicatorSpinDown:
-    case QStyle::PE_IndicatorSpinUp:
-    {
-        painter->setBrush(pal.color(QPalette::WindowText));
-
-        QImage image;
-        if (primitive == QStyle::PE_IndicatorArrowRight) {
-            image = QIcon::fromTheme("go-next").pixmap(16, 16).toImage();
-        } else if (primitive == QStyle::PE_IndicatorArrowLeft) {
-            image = QIcon::fromTheme("go-previous").pixmap(16, 16).toImage();
-        } else if (primitive == QStyle::PE_IndicatorArrowDown || primitive == QStyle::PE_IndicatorSpinDown) {
-            image = QIcon::fromTheme("go-down").pixmap(16, 16).toImage();
-        } else if (primitive == QStyle::PE_IndicatorArrowUp || primitive == QStyle::PE_IndicatorSpinUp) {
-            image = QIcon::fromTheme("go-up").pixmap(16, 16).toImage();
-        }
-        tintImage(image, pal.color(QPalette::WindowText));
-
-        QRect imageRect;
-        imageRect.setTop(rect.top() + (rect.height() / 2) - 8);
-        imageRect.setLeft(rect.left() + (rect.width() / 2) - 8);
-        imageRect.setSize(QSize(16, 16));
-        painter->drawImage(imageRect, image);
-        break;
-    }
-    case QStyle::PE_IndicatorBranch:
-    {
-
-        if (option->state & QStyle::State_Item) {
-            //Draw horizontal branch
+        case QStyle::PE_FrameTabBarBase:
+        {
             painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.left() + rect.width() / 2, rect.top() + rect.height() / 2, rect.right(), rect.top() + rect.height() / 2);
-
-            //Draw top part of vertical branch
-            painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.top() + rect.height() / 2);
+            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            break;
         }
-
-
-        if (option->state & QStyle::State_Sibling){
-            //Show vertical branch
+        /*case QStyle::PE_FrameTabWidget:
+        {
             painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.bottom());
-        }
-
-        if (option->state & QStyle::State_Children) {
-            //Draw disclosure triangle (closed)
-            QRect triangleRect = rect;
-            triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
-            triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
-            triangleRect.setSize(QSize(8, 8));
-            painter->setBrush(pal.color(QPalette::WindowText));
-            painter->drawRect(triangleRect);
-        }
-
-        if (option->state & QStyle::State_Open) {
-            //Show disclosure triangle (open)
-            QRect triangleRect = rect;
-            triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
-            triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
-            triangleRect.setSize(QSize(8, 8));
-            painter->setBrush(pal.color(QPalette::Window));
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawRect(triangleRect);
-        }
-        break;
-    }
-    case QStyle::PE_PanelToolBar:
-    {
-        painter->setBrush(pal.color(QPalette::Window));
-        painter->drawRect(rect);
-        break;
-    }
-    case QStyle::PE_PanelItemViewItem:
-    case QStyle::PE_PanelItemViewRow:
-    {
-        //this->drawControl(CE_ItemViewItem, option, painter, widget);
-
-        const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
-        if (item == NULL) return;
-
-        painter->setPen(transparent);
-
-        QPen textPen;
-        if (option->state & QStyle::State_Selected) {
-            painter->setBrush(pal.brush(QPalette::Highlight));
-            textPen = pal.color(QPalette::HighlightedText);
-            //painter->setPen(pal.color(QPalette::HighlightedText));
-        } else if (option->state & QStyle::State_MouseOver) {
-            QColor col = pal.color(QPalette::Highlight);
-            col.setAlpha(127);
-            painter->setBrush(col);
-            textPen = pal.color(QPalette::HighlightedText);
-        } else {
+            painter->drawLine(rect.topLeft(), rect.bottomLeft());
+            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            painter->drawLine(rect.bottomRight(), rect.topRight());
+            break;
+        }*/
+        case QStyle::PE_PanelLineEdit:
+        {
             painter->setBrush(pal.brush(QPalette::Window));
-            textPen = pal.color(QPalette::WindowText);
-
-            //painter->setPen(pal.color(QPalette::WindowText));
-        }
-        painter->drawRect(rect);
-
-        painter->setBrush(item->backgroundBrush);
-        painter->drawRect(rect);
-
-        QRect iconRect, textRect = rect;
-
-        textRect.setHeight(rect.height() - 2);
-        if (!item->icon.isNull()) {
-            iconRect.setSize(((QAbstractItemView*) widget)->iconSize());
-            QIcon icon = item->icon;
-            QImage iconImage = icon.pixmap(iconRect.size()).toImage();
-            iconRect.moveLeft(rect.left() + 2);
-            iconRect.moveTop(rect.top() + (rect.height() / 2) - (iconRect.height() / 2));
-            painter->drawImage(iconRect, iconImage);
-            textRect.setLeft(iconRect.right() + 6);
-        } else {
-            textRect.setLeft(rect.left() + 6);
-        }
-
-
-        painter->setPen(textPen);
-        painter->drawText(rect, "");
-        break;
-    }
-    case QStyle::PE_IndicatorMenuCheckMark:
-    {
-        painter->setBrush(pal.brush(QPalette::Window));
-
-        QPolygon triangle1;
-        triangle1.append(QPoint(rect.right(), rect.top()));
-        triangle1.append(QPoint(rect.right(), rect.top() + halfHeight));
-        triangle1.append(QPoint(rect.right() - halfHeight, rect.top()));
-        painter->drawPolygon(triangle1);
-
-        QPolygon triangle2;
-        triangle2.append(QPoint(rect.right(), rect.bottom()));
-        triangle2.append(QPoint(rect.right(), rect.bottom() - halfHeight));
-        triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom()));
-        painter->drawPolygon(triangle2);
-        break;
-    }
-    case QStyle::PE_PanelTipLabel:
-    {
-        painter->setBrush(pal.brush(QPalette::Window));
-        painter->drawRect(rect);
-    }
-    case QStyle::PE_PanelStatusBar:
-    {
-        painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawLine(rect.topLeft(), rect.topRight());
-        break;
-    }
-    case QStyle::PE_PanelButtonCommand:
-    {
-        const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
-        if (button == NULL) return;
-        QBrush brush;
-        QPen textPen;
-
-        if (widget == NULL) {
-            //Sorry... :(
-            goto drawNormalButton;
-        }
-
-        if (widget->property("type") == "positive") {
-            if (button->state & QStyle::State_Enabled) {
-                brush = QBrush(col(0, 200, 0));
+            painter->drawRect(rect);
+            if (option->state & QStyle::State_Enabled) {
+                painter->setPen(pal.color(QPalette::WindowText));
             } else {
-                brush = QBrush(col(67, 67, 67));
+                painter->setPen(pal.color(QPalette::Disabled, QPalette::WindowText));
             }
 
-            if (button->state & QStyle::State_HasFocus) {
-                brush = QBrush(col(0, 225, 0));
-            }
+            painter->drawLine(rect.topLeft(), rect.bottomLeft());
+            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            break;
+        }
+        case QStyle::PE_PanelMenu:
+        {
+            painter->setBrush(pal.brush(QPalette::Window));
+            painter->setPen(transparent);
+            painter->drawRect(option->rect);
 
-            if (button->state & QStyle::State_MouseOver) {
-                brush = QBrush(col(0, 250, 0));
-            }
-
-            if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
-                brush = QBrush(col(0, 150, 0));
-            }
-            textPen = QColor(0, 0, 0);
-        } else if (widget->property("type") == "destructive") {
-            if (button->state & QStyle::State_Enabled) {
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(option->rect.topLeft(), option->rect.bottomLeft());
+            painter->drawLine(option->rect.bottomLeft(), option->rect.bottomRight());
+            painter->drawLine(option->rect.bottomRight(), option->rect.topRight());
+            painter->drawLine(option->rect.topRight(), option->rect.topLeft());
+            break;
+        }
+        case QStyle::PE_IndicatorTabClose:
+        {
+            QBrush brush;
+            if (option->state & QStyle::State_Enabled) {
                 brush = QBrush(col(200, 0, 0));
             } else {
                 brush = QBrush(col(67, 67, 67));
             }
 
-            if (button->state & QStyle::State_HasFocus) {
-                brush = QBrush(col(225, 0, 0));
-            }
-
-            if (button->state & QStyle::State_MouseOver) {
+            if (option->state & QStyle::State_MouseOver) {
                 brush = QBrush(col(250, 0, 0));
             }
 
-            if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+            if (option->state & QStyle::State_Sunken) {
                 brush = QBrush(col(150, 0, 0));
             }
-            textPen = col(255, 255, 255);
-        } else {
-            drawNormalButton:
-            brush = QBrush(pal.color(QPalette::Window));
+
+            QRect closeButtonRect = rect;
+            //closeButtonRect.adjust(3, 3, -3, -3);
+
+            painter->setBrush(brush);
+            painter->drawEllipse(closeButtonRect);
+            break;
+        }
+        case PE_IndicatorTabTearLeft:
+        {
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(rect.topLeft(), rect.bottomLeft());
+            break;
+        }
+        case PE_IndicatorTabTearRight:
+        {
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(rect.topRight(), rect.bottomRight());
+            break;
+        }
+        case QStyle::PE_IndicatorArrowRight:
+        case QStyle::PE_IndicatorArrowLeft:
+        case QStyle::PE_IndicatorArrowDown:
+        case QStyle::PE_IndicatorArrowUp:
+        case QStyle::PE_IndicatorSpinDown:
+        case QStyle::PE_IndicatorSpinUp:
+        {
+            painter->setBrush(pal.color(QPalette::WindowText));
+
+            QImage image;
+            if (primitive == QStyle::PE_IndicatorArrowRight) {
+                image = QIcon::fromTheme("go-next").pixmap(16, 16).toImage();
+            } else if (primitive == QStyle::PE_IndicatorArrowLeft) {
+                image = QIcon::fromTheme("go-previous").pixmap(16, 16).toImage();
+            } else if (primitive == QStyle::PE_IndicatorArrowDown || primitive == QStyle::PE_IndicatorSpinDown) {
+                image = QIcon::fromTheme("go-down").pixmap(16, 16).toImage();
+            } else if (primitive == QStyle::PE_IndicatorArrowUp || primitive == QStyle::PE_IndicatorSpinUp) {
+                image = QIcon::fromTheme("go-up").pixmap(16, 16).toImage();
+            }
+            tintImage(image, pal.color(QPalette::WindowText));
+
+            QRect imageRect;
+            imageRect.setTop(rect.top() + (rect.height() / 2) - 8);
+            imageRect.setLeft(rect.left() + (rect.width() / 2) - 8);
+            imageRect.setSize(QSize(16, 16));
+            painter->drawImage(imageRect, image);
+            break;
+        }
+        case QStyle::PE_IndicatorBranch:
+        {
+
+            if (option->state & QStyle::State_Item) {
+                //Draw horizontal branch
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawLine(rect.left() + rect.width() / 2, rect.top() + rect.height() / 2, rect.right(), rect.top() + rect.height() / 2);
+
+                //Draw top part of vertical branch
+                painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.top() + rect.height() / 2);
+            }
+
+
+            if (option->state & QStyle::State_Sibling){
+                //Show vertical branch
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.bottom());
+            }
+
+            if (option->state & QStyle::State_Children) {
+                //Draw disclosure triangle (closed)
+                QRect triangleRect = rect;
+                triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
+                triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
+                triangleRect.setSize(QSize(8, 8));
+                painter->setBrush(pal.color(QPalette::WindowText));
+                painter->drawRect(triangleRect);
+            }
+
+            if (option->state & QStyle::State_Open) {
+                //Show disclosure triangle (open)
+                QRect triangleRect = rect;
+                triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
+                triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
+                triangleRect.setSize(QSize(8, 8));
+                painter->setBrush(pal.color(QPalette::Window));
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawRect(triangleRect);
+            }
+            break;
+        }
+        case QStyle::PE_PanelToolBar:
+        {
+            painter->setBrush(pal.color(QPalette::Window));
+            painter->drawRect(rect);
+            break;
+        }
+        case QStyle::PE_PanelItemViewItem:
+        case QStyle::PE_PanelItemViewRow:
+        {
+            //this->drawControl(CE_ItemViewItem, option, painter, widget);
+
+            const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
+            if (item == NULL) return;
+
+            painter->setPen(transparent);
+
+            QPen textPen;
+            if (option->state & QStyle::State_Selected) {
+                painter->setBrush(pal.brush(QPalette::Highlight));
+                textPen = pal.color(QPalette::HighlightedText);
+                //painter->setPen(pal.color(QPalette::HighlightedText));
+            } else if (option->state & QStyle::State_MouseOver) {
+                QColor col = pal.color(QPalette::Highlight);
+                col.setAlpha(127);
+                painter->setBrush(col);
+                textPen = pal.color(QPalette::HighlightedText);
+            } else {
+                painter->setBrush(pal.brush(QPalette::Window));
+                textPen = pal.color(QPalette::WindowText);
+
+                //painter->setPen(pal.color(QPalette::WindowText));
+            }
+            painter->drawRect(rect);
+
+            painter->setBrush(item->backgroundBrush);
+            painter->drawRect(rect);
+
+            QRect iconRect, textRect = rect;
+
+            textRect.setHeight(rect.height() - 2);
+            if (!item->icon.isNull()) {
+                iconRect.setSize(((QAbstractItemView*) widget)->iconSize());
+                QIcon icon = item->icon;
+                QImage iconImage = icon.pixmap(iconRect.size()).toImage();
+                iconRect.moveLeft(rect.left() + 2);
+                iconRect.moveTop(rect.top() + (rect.height() / 2) - (iconRect.height() / 2));
+                painter->drawImage(iconRect, iconImage);
+                textRect.setLeft(iconRect.right() + 6);
+            } else {
+                textRect.setLeft(rect.left() + 6);
+            }
+
+
+            painter->setPen(textPen);
+            painter->drawText(rect, "");
+            break;
+        }
+        case QStyle::PE_IndicatorMenuCheckMark:
+        {
+            painter->setBrush(pal.brush(QPalette::Window));
+
+            QPolygon triangle1;
+            triangle1.append(QPoint(rect.right(), rect.top()));
+            triangle1.append(QPoint(rect.right(), rect.top() + halfHeight));
+            triangle1.append(QPoint(rect.right() - halfHeight, rect.top()));
+            painter->drawPolygon(triangle1);
+
+            QPolygon triangle2;
+            triangle2.append(QPoint(rect.right(), rect.bottom()));
+            triangle2.append(QPoint(rect.right(), rect.bottom() - halfHeight));
+            triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom()));
+            painter->drawPolygon(triangle2);
+            break;
+        }
+        case QStyle::PE_PanelTipLabel:
+        {
+            painter->setBrush(pal.brush(QPalette::Window));
+            painter->drawRect(rect);
+        }
+        case QStyle::PE_PanelStatusBar:
+        {
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(rect.topLeft(), rect.topRight());
+            break;
+        }
+        case QStyle::PE_PanelButtonCommand:
+        {
+            const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
+            if (button == NULL) return;
+            QBrush brush;
+            QPen textPen;
+
+            if (widget == NULL) {
+                //Sorry... :(
+                goto drawNormalButton;
+            }
+
+            if (widget->property("type") == "positive") {
+                if (button->state & QStyle::State_Enabled) {
+                    brush = QBrush(col(0, 200, 0));
+                } else {
+                    brush = QBrush(col(67, 67, 67));
+                }
+
+                if (button->state & QStyle::State_HasFocus) {
+                    brush = QBrush(col(0, 225, 0));
+                }
+
+                if (button->state & QStyle::State_MouseOver) {
+                    brush = QBrush(col(0, 250, 0));
+                }
+
+                if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+                    brush = QBrush(col(0, 150, 0));
+                }
+                textPen = QColor(0, 0, 0);
+            } else if (widget->property("type") == "destructive") {
+                if (button->state & QStyle::State_Enabled) {
+                    brush = QBrush(col(200, 0, 0));
+                } else {
+                    brush = QBrush(col(67, 67, 67));
+                }
+
+                if (button->state & QStyle::State_HasFocus) {
+                    brush = QBrush(col(225, 0, 0));
+                }
+
+                if (button->state & QStyle::State_MouseOver) {
+                    brush = QBrush(col(250, 0, 0));
+                }
+
+                if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+                    brush = QBrush(col(150, 0, 0));
+                }
+                textPen = col(255, 255, 255);
+            } else {
+                drawNormalButton:
+                brush = QBrush(pal.color(QPalette::Window));
+
+                if (button->state & QStyle::State_MouseOver) {
+                    brush = QBrush(pal.color(QPalette::Window).lighter());
+                }
+
+                if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+                    brush = QBrush(pal.color(QPalette::Window).darker());
+                }
+                textPen = pal.color(QPalette::WindowText);
+            }
+
+            painter->setBrush(brush);
+            painter->drawRect(rect);
+            break;
+        }
+        /*case QStyle::PE_FrameButtonTool:
+        case QStyle::PE_PanelButtonTool:
+        {
+            const QStyleOptionToolBox* button = qstyleoption_cast<const QStyleOptionToolBox*>(option);
+            if (button == NULL) return;
+
+            QBrush brush = QBrush(pal.color(QPalette::Window));
+            QPen textPen;
 
             if (button->state & QStyle::State_MouseOver) {
                 brush = QBrush(pal.color(QPalette::Window).lighter());
             }
 
-            if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
+            if (button->state & QStyle::State_Sunken) {
                 brush = QBrush(pal.color(QPalette::Window).darker());
             }
+
+            if (button->state & QStyle::State_On) {
+                brush = QBrush(pal.color(QPalette::Highlight));
+            }
+
             textPen = pal.color(QPalette::WindowText);
+
+            painter->setBrush(brush);
+            painter->drawRect(rect);
+
+            //painter->drawText(rect, Qt::AlignCenter, button->text);
+            break;
+        }*/
+        case QStyle::PE_IndicatorToolBarHandle:
+        {
+            const QStyleOptionToolBar* bar = qstyleoption_cast<const QStyleOptionToolBar*>(option);
+            if (bar == NULL) return;
+
+            painter->setPen(pal.color(QPalette::Foreground));
+            if (bar->direction == Qt::LeftToRight) {
+                painter->drawLine(rect.topLeft(), rect.bottomLeft());
+                painter->drawLine(rect.left() + 2, rect.top(), rect.left() + 2, rect.bottom());
+            } else if (bar->direction == Qt::RightToLeft) {
+                painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+                painter->drawLine(rect.left(), rect.bottom() + 2, rect.right(), rect.bottom() + 2);
+            }
+            break;
         }
+        case QStyle::PE_IndicatorButtonDropDown:
+        {
+            painter->setBrush(pal.brush(QPalette::Foreground));
 
-        painter->setBrush(brush);
-        painter->drawRect(rect);
-        break;
-    }
-    /*case QStyle::PE_FrameButtonTool:
-    case QStyle::PE_PanelButtonTool:
-    {
-        const QStyleOptionToolBox* button = qstyleoption_cast<const QStyleOptionToolBox*>(option);
-        if (button == NULL) return;
+            QPolygon pol;
+            pol.append(rect.bottomRight());
+            pol.append(QPoint(rect.right(), rect.bottom() - 4));
+            pol.append(QPoint(rect.right() - 4, rect.bottom()));
 
-        QBrush brush = QBrush(pal.color(QPalette::Window));
-        QPen textPen;
+            painter->drawPolygon(pol);
 
-        if (button->state & QStyle::State_MouseOver) {
-            brush = QBrush(pal.color(QPalette::Window).lighter());
+            break;
         }
-
-        if (button->state & QStyle::State_Sunken) {
-            brush = QBrush(pal.color(QPalette::Window).darker());
+        case QStyle::PE_PanelButtonBevel:
+        case QStyle::PE_PanelMenuBar:
+        case QStyle::PE_FrameMenu:
+        case PE_FrameFocusRect:
+        case QStyle::PE_FrameStatusBar:
+        {
+            //Don't do anything.
+            break;
         }
-
-        if (button->state & QStyle::State_On) {
-            brush = QBrush(pal.color(QPalette::Highlight));
-        }
-
-        textPen = pal.color(QPalette::WindowText);
-
-        painter->setBrush(brush);
-        painter->drawRect(rect);
-
-        //painter->drawText(rect, Qt::AlignCenter, button->text);
-        break;
-    }*/
-    case QStyle::PE_PanelButtonBevel:
-    case QStyle::PE_PanelMenuBar:
-    case QStyle::PE_FrameMenu:
-    case PE_FrameFocusRect:
-    {
-        //Don't do anything.
-        break;
-    }
-    default:
-        //qDebug() << "Style not handled:" << primitive;
-        QCommonStyle::drawPrimitive(primitive, option, painter, widget);
+        default:
+            //qDebug() << "Style not handled:" << primitive;
+            QCommonStyle::drawPrimitive(primitive, option, painter, widget);
     }
 }
 
@@ -1562,8 +1593,19 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
 
         QString text = item->text;
 
-        size.setHeight(opt->fontMetrics.height() + 6);
-        size.setWidth(opt->fontMetrics.width(text) + (item->icon.isNull() ? 0 : 16) + 16);
+        if (item->icon.isNull()) {
+            QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
+            if (iconSize.isNull()) {
+                iconSize = QSize(16, 16);
+            }
+            size.setHeight(opt->fontMetrics.height() + 6);
+            size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 32);
+        } else {
+            QAbstractItemView* wid = (QAbstractItemView*) widget;
+            QSize iconSize = item->icon.actualSize(wid->iconSize());
+            size.setHeight(opt->fontMetrics.height() + iconSize.height() + 6);
+            size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 16);
+        }
         return size;
     }
     case CT_PushButton:

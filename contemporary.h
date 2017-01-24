@@ -21,6 +21,7 @@
 #include <QRadioButton>
 #include <QSettings>
 #include <QCommandLinkButton>
+#include <QAbstractItemView>
 
 class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle
 {
@@ -50,7 +51,7 @@ private:
     void scheduleRepaint(const QWidget* widget, int after = 1000 / 60) const;
 
     uint indetermiateProgressSection = 0;
-    QTimer* indeterminateTimer; //Increments the indeterminateProgressSection at regular intervals
+    QTimer* indeterminateTimer = NULL; //Increments the indeterminateProgressSection at regular intervals
 
     QVariant animation(QString id, QVariant retVal = "") const;
     void putAnimation(QString type, QString id, QVariant value) const;
