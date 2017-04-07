@@ -1560,88 +1560,105 @@ QColor Style::col(int r, int g, int b) const {
 QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &contentsSize, const QWidget *widget) const {
     if (widget == NULL) return QSize();
     QSize size = contentsSize;
+
     switch (ct) {
-    case CT_LineEdit:
-    {
-        size.setHeight(size.height() + 5);
-        return size;
-    }
-    case CT_MenuBarItem:
-    {
-        size.setHeight(size.height() + 10);
-        size.setWidth(size.width() + 20);
-        return size;
-    }
-    case CT_ScrollBar:
-    {
-        int width = 5;
-        if (opt->state & QStyle::State_MouseOver) {
-            width = 10;
+        case CT_LineEdit:
+        {
+            size.setHeight(size.height() + 5);
+            return size;
         }
-
-        if (size.width() > size.height()) { //Horizontal
-            size.setHeight(width);
-        } else { //Vertical
-            size.setWidth(width);
-        }
-        return size;
-    }
-    case CT_ItemViewItem:
-    {
-        const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt);
-        if (item == NULL) return size;
-
-        QString text = item->text;
-
-        if (item->icon.isNull()) {
-            QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
-            if (iconSize.isNull()) {
-                iconSize = QSize(16, 16);
+        case CT_MenuBarItem:
+        {
+            if (touchMode) {
+                size.setHeight(size.height() + 20);
+            } else {
+                size.setHeight(size.height() + 10);
             }
-            size.setHeight(opt->fontMetrics.height() + 6);
-            size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 32);
-        } else {
-            QAbstractItemView* wid = (QAbstractItemView*) widget;
-            QSize iconSize = item->icon.actualSize(wid->iconSize());
-            size.setHeight(opt->fontMetrics.height() + iconSize.height() + 6);
-            size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 16);
+            size.setWidth(size.width() + 20);
+            return size;
         }
-        return size;
-    }
-    case CT_PushButton:
-    case CT_ToolButton:
-    {
-        size.setHeight(contentsSize.height() + 20);
-        size.setWidth(contentsSize.width() + 20);
-        return size;
-    }
-    case CT_TabBarTab:
-    {
-        size.setHeight(contentsSize.height() + 10);
-        size.setWidth(contentsSize.width() + 10);
-        return size;
-    }
-    case CT_ProgressBar:
-    {
-        size.setHeight(10);
-        return size;
-    }
-    case CT_MenuItem:
-    {
-        const QStyleOptionMenuItem* item = qstyleoption_cast<const QStyleOptionMenuItem*>(opt);
-        if (item == NULL) return size;
+        case CT_ScrollBar:
+        {
+            int width = 5;
+            if (opt->state & QStyle::State_MouseOver) {
+                width = 10;
+            }
 
-        if (item->menuItemType == QStyleOptionMenuItem::Normal ||
-                (item->menuItemType == QStyleOptionMenuItem::Separator && item->text != "")) {
-            size.setHeight(item->fontMetrics.height() + 6);
-            size.setWidth(item->fontMetrics.width(item->text) + 28);
-        } else {
-            size = QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
+            if (size.width() > size.height()) { //Horizontal
+                size.setHeight(width);
+            } else { //Vertical
+                size.setWidth(width);
+            }
+            return size;
         }
-        return size;
-    }
-    default:
-        return QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
+        case CT_ItemViewItem:
+        {
+            const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt);
+            if (item == NULL) return size;
+
+            QString text = item->text;
+
+            if (item->icon.isNull()) {
+                QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
+                if (iconSize.isNull()) {
+                    iconSize = QSize(16, 16);
+                }
+                size.setHeight(opt->fontMetrics.height() + 6);
+                size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 32);
+            } else {
+                QAbstractItemView* wid = (QAbstractItemView*) widget;
+                QSize iconSize = item->icon.actualSize(wid->iconSize());
+                size.setHeight(opt->fontMetrics.height() + iconSize.height() + 6);
+                size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 16);
+            }
+
+            if (touchMode) {
+                size.setHeight(size.height() + 20);
+            }
+            return size;
+        }
+        case CT_PushButton:
+        case CT_ToolButton:
+        {
+            if (touchMode) {
+                size.setHeight(contentsSize.height() + 30);
+            } else {
+                size.setHeight(contentsSize.height() + 20);
+            }
+            size.setWidth(contentsSize.width() + 20);
+            return size;
+        }
+        case CT_TabBarTab:
+        {
+            size.setHeight(contentsSize.height() + 10);
+            size.setWidth(contentsSize.width() + 10);
+            return size;
+        }
+        case CT_ProgressBar:
+        {
+            size.setHeight(10);
+            return size;
+        }
+        case CT_MenuItem:
+        {
+            const QStyleOptionMenuItem* item = qstyleoption_cast<const QStyleOptionMenuItem*>(opt);
+            if (item == NULL) return size;
+
+            if (item->menuItemType == QStyleOptionMenuItem::Normal ||
+                    (item->menuItemType == QStyleOptionMenuItem::Separator && item->text != "")) {
+                size.setHeight(item->fontMetrics.height() + 6);
+                if (touchMode) {
+                    size.setHeight(size.height() + 10);
+                }
+                size.setWidth(item->fontMetrics.width(item->text) + 28);
+            } else {
+                size = QCommonStyle::sizeFromContents(ct, opt, size, widget);
+            }
+
+            return size;
+        }
+        default:
+            return QCommonStyle::sizeFromContents(ct, opt, size, widget);
     }
 }
 

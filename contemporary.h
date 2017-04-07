@@ -62,6 +62,7 @@ private:
     mutable QStringList animationIds;
 
     QSettings* settings;
+    bool touchMode = false;
     //mutable QMap<QString, int> currentAnimations;
 };
 
