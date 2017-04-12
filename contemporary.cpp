@@ -175,7 +175,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     {
         const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
         if (button == NULL) return;
-        QRect checkArea(0, rect.height() / 2 - 6, 12, 12);
+        QRect checkArea(0, rect.height() / 2 - 6 * getDPIScaling(), 12 * getDPIScaling(), 12 * getDPIScaling());
 
         painter->setPen(pal.color(QPalette::WindowText));
 
@@ -206,7 +206,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             painter->drawRect(checkArea);
 
             QRect tickArea = checkArea;
-            tickArea.adjust(3, 3, -1, -1);
+            tickArea.adjust(3 * getDPIScaling(), 3 * getDPIScaling(), -1 * getDPIScaling(), -1 * getDPIScaling());
 
             /*QPen pen = pal.color(QPalette::Window);
             pen.setWidth(1);
@@ -237,7 +237,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         QRect textArea = rect;
 
         //Draw to the right of the checkbox
-        textArea.setLeft(checkArea.right() + 4);
+        textArea.setLeft(checkArea.right() + 4 * getDPIScaling());
         painter->setPen(pal.color(QPalette::WindowText));
         painter->drawText(textArea, Qt::AlignVCenter | Qt::AlignLeft, text.remove("&"));
     }
@@ -256,7 +256,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
         if (button == NULL) return;
 
-        QRect checkArea(0, rect.height() / 2 - 6, 12, 12);
+        QRect checkArea(0, rect.height() / 2 - 6 * getDPIScaling(), 12 * getDPIScaling(), 12 * getDPIScaling());
 
         painter->setPen(pal.color(QPalette::WindowText));
         QBrush brush = QBrush(transparent);
@@ -273,7 +273,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         if (button->state & QStyle::State_On) {
             painter->setPen(transparent);
             painter->setBrush(pal.color(QPalette::WindowText));
-            painter->drawEllipse(checkArea.adjusted(2, 2, -1, -1));
+            painter->drawEllipse(checkArea.adjusted(2 * getDPIScaling(), 2 * getDPIScaling(), -1 * getDPIScaling(), -1 * getDPIScaling()));
         }
 
         //Draw text
@@ -292,7 +292,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         if (bar == NULL) return;
 
         QRect barArea = rect;
-        barArea.adjust(1, 1, -2, -1);
+        barArea.adjust(1 * getDPIScaling(), 1 * getDPIScaling(), -2 * getDPIScaling(), -1 * getDPIScaling());
 
         painter->setPen(transparent);
         if (bar->maximum == 0 && bar->minimum == 0) {
@@ -349,7 +349,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
 
         painter->setPen(pal.color(QPalette::WindowText));
         painter->setBrush(QBrush(transparent));
-        painter->drawRect(rect.adjusted(0, 0, -1, -1));
+        painter->drawRect(rect.adjusted(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling()));
         break;
     }
     case QStyle::CE_MenuBarItem:
@@ -511,8 +511,8 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             //    textRect.setLeft(textRect.height() + 4);
             //}
 
-            textRect.setLeft(rect.left() + 24);
-            textRect.setRight(rect.right() - 4);
+            textRect.setLeft(rect.left() + 24 * getDPIScaling());
+            textRect.setRight(rect.right() - 4 * getDPIScaling());
 
             if (text.contains("\t")) {
                 QString keyText = text.mid(text.indexOf("\t"));
@@ -545,21 +545,21 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                 painter->drawPolygon(triangle1);
 
                 QPolygon triangle2;
-                triangle2.append(QPoint(rect.right(), rect.bottom() + 1));
-                triangle2.append(QPoint(rect.right(), rect.bottom() + 1 - halfHeight));
-                triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom() + 1));
+                triangle2.append(QPoint(rect.right(), rect.bottom() + 1 * getDPIScaling()));
+                triangle2.append(QPoint(rect.right(), rect.bottom() + 1 * getDPIScaling() - halfHeight));
+                triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom() + 1 * getDPIScaling()));
                 painter->drawPolygon(triangle2);
             }
 
             if (item->checkType == QStyleOptionMenuItem::NotCheckable) {
                 if (!item->icon.isNull()) {
                     QRect iconRect;
-                    iconRect.setLeft(4);
-                    iconRect.setTop(rect.top() + (rect.height() / 2) - 8);
-                    iconRect.setSize(QSize(16, 16));
+                    iconRect.setLeft(4 * getDPIScaling());
+                    iconRect.setTop(rect.top() + (rect.height() / 2) - 8 * getDPIScaling());
+                    iconRect.setSize(QSize(16 * getDPIScaling(), 16 * getDPIScaling()));
 
                     QIcon icon = item->icon;
-                    QImage image = icon.pixmap(16, 16).toImage();
+                    QImage image = icon.pixmap(16 * getDPIScaling(), 16 * getDPIScaling()).toImage();
                     image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
                     tintImage(image, textPen.color());
 
@@ -686,8 +686,8 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
 
         if (!item->icon.isNull()) {
             QRect iconRect = rect;
-            iconRect.adjust(4, 0, 4, 0);
-            iconRect.adjust(item->leftButtonSize.width() + 8, 0, item->leftButtonSize.width() + 8, 0);
+            iconRect.adjust(4 * getDPIScaling(), 0, 4 * getDPIScaling(), 0);
+            iconRect.adjust(item->leftButtonSize.width() + 8 * getDPIScaling(), 0, item->leftButtonSize.width() + 8 * getDPIScaling(), 0);
 
             iconRect.setSize(item->iconSize);
             iconRect.moveTop((rect.height() / 2) - (item->iconSize.height() / 2));
@@ -732,8 +732,8 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     {
         QPolygon triangle;
         triangle.append(rect.bottomRight());
-        triangle.append(QPoint(rect.bottom() - 8, rect.right()));
-        triangle.append(QPoint(rect.bottom(), rect.right() - 8));
+        triangle.append(QPoint(rect.bottom() - 8 * getDPIScaling(), rect.right()));
+        triangle.append(QPoint(rect.bottom(), rect.right() - 8 * getDPIScaling()));
 
         painter->setBrush(pal.brush(QPalette::WindowText));
         painter->drawPolygon(triangle);
@@ -771,7 +771,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
             //QSize iconSize(16, 16);
             if (!iconSize.isValid()) {
-                iconSize = QSize(16, 16);
+                iconSize = QSize(16 * getDPIScaling(), 16 * getDPIScaling());
             }
             iconRect.setSize(iconSize);
             QIcon icon = item->icon;
@@ -798,7 +798,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         text.remove("&");
 
         QRect textRect = rect;
-        textRect.adjust(4, 0, 0, 0);
+        textRect.adjust(4 * getDPIScaling(), 0, 0, 0);
 
         painter->setPen(pal.color(QPalette::WindowText));
         painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, text);
@@ -859,9 +859,9 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         painter->setBrush(brush);
         painter->drawRect(rect.adjusted(0, 0, -1, -1));
         if (item->currentIcon.isNull()) {
-            painter->drawText(rect.adjusted(4, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, item->currentText);
+            painter->drawText(rect.adjusted(4 * getDPIScaling(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, item->currentText);
         } else {
-            painter->drawText(rect.adjusted(8 + item->iconSize.width(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, item->currentText);
+            painter->drawText(rect.adjusted(8 * getDPIScaling() + item->iconSize.width(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, item->currentText);
         }
 
         //if (item->state & QStyle::State_) {
@@ -869,7 +869,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             painter->setPen(transparent);
 
             int halfHeight = rect.height() / 2;
-            rect.adjust(1, 1, -2, -2);
+            rect.adjust(1 * getDPIScaling(), 1 * getDPIScaling(), -2 * getDPIScaling(), -2 * getDPIScaling());
 
             QPolygon triangle;
             triangle.append(QPoint(rect.right(), rect.bottom()));
@@ -1063,19 +1063,19 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         if (slider == NULL) return;
 
         //Adjust rectangle to be only 10px tall if it is larger.
-        if (rect.height() > 16) {
-            int reduction = (rect.height() - 16) / 2;
+        if (rect.height() > 16 * getDPIScaling()) {
+            int reduction = (rect.height() - 16 * getDPIScaling()) / 2;
             rect.adjust(0, reduction, 0, -reduction);
         }
 
         //Draw border
         painter->setPen(pal.color(QPalette::WindowText));
         painter->setBrush(pal.color(QPalette::Window));
-        painter->drawRect(rect.adjusted(0, 0, -1, -1));
+        painter->drawRect(rect.adjusted(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling()));
 
         //Draw selected portion
         QRect selection = rect;
-        selection.adjust(1, 1, -2, -2);
+        selection.adjust(1, 1, -2 * getDPIScaling(), -2 * getDPIScaling());
         selection.setWidth((((float) slider->sliderPosition - (float) slider->minimum) / ((float) slider->maximum - (float) slider->minimum)) * (float) selection.width());
         painter->setPen(transparent);
         painter->setBrush(pal.brush(QPalette::Highlight));
@@ -1083,7 +1083,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
 
         //Draw Thumb
         QRect thumb = rect;
-        thumb.setSize(QSize(rect.height() - 1, rect.height() - 1));
+        thumb.setSize(QSize(rect.height() - 1 * getDPIScaling(), rect.height() - 1 * getDPIScaling()));
         thumb.moveLeft(selection.right() - (thumb.width() / 2));
 
         if (slider->state & State_On || slider->state & State_Sunken) {
@@ -1133,7 +1133,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         case QStyle::PE_FrameDockWidget:
         {
             painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawRect(rect.adjusted(0, 0, -1, -1));
+            painter->drawRect(rect.adjusted(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling()));
             break;
         }
         case QStyle::PE_FrameTabBarBase:
@@ -1224,20 +1224,20 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
 
             QImage image;
             if (primitive == QStyle::PE_IndicatorArrowRight) {
-                image = QIcon::fromTheme("go-next").pixmap(16, 16).toImage();
+                image = QIcon::fromTheme("go-next").pixmap(16 * getDPIScaling(), 16 * getDPIScaling()).toImage();
             } else if (primitive == QStyle::PE_IndicatorArrowLeft) {
-                image = QIcon::fromTheme("go-previous").pixmap(16, 16).toImage();
+                image = QIcon::fromTheme("go-previous").pixmap(16 * getDPIScaling(), 16 * getDPIScaling()).toImage();
             } else if (primitive == QStyle::PE_IndicatorArrowDown || primitive == QStyle::PE_IndicatorSpinDown) {
-                image = QIcon::fromTheme("go-down").pixmap(16, 16).toImage();
+                image = QIcon::fromTheme("go-down").pixmap(16 * getDPIScaling(), 16 * getDPIScaling()).toImage();
             } else if (primitive == QStyle::PE_IndicatorArrowUp || primitive == QStyle::PE_IndicatorSpinUp) {
-                image = QIcon::fromTheme("go-up").pixmap(16, 16).toImage();
+                image = QIcon::fromTheme("go-up").pixmap(16 * getDPIScaling(), 16 * getDPIScaling()).toImage();
             }
             tintImage(image, pal.color(QPalette::WindowText));
 
             QRect imageRect;
-            imageRect.setTop(rect.top() + (rect.height() / 2) - 8);
-            imageRect.setLeft(rect.left() + (rect.width() / 2) - 8);
-            imageRect.setSize(QSize(16, 16));
+            imageRect.setTop(rect.top() + (rect.height() / 2) - 8 * getDPIScaling());
+            imageRect.setLeft(rect.left() + (rect.width() / 2) - 8 * getDPIScaling());
+            imageRect.setSize(QSize(16 * getDPIScaling(), 16 * getDPIScaling()));
             painter->drawImage(imageRect, image);
             break;
         }
@@ -1263,9 +1263,9 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             if (option->state & QStyle::State_Children) {
                 //Draw disclosure triangle (closed)
                 QRect triangleRect = rect;
-                triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
-                triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
-                triangleRect.setSize(QSize(8, 8));
+                triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4 * getDPIScaling());
+                triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4 * getDPIScaling());
+                triangleRect.setSize(QSize(8 * getDPIScaling(), 8 * getDPIScaling()));
                 painter->setBrush(pal.color(QPalette::WindowText));
                 painter->drawRect(triangleRect);
             }
@@ -1273,9 +1273,9 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             if (option->state & QStyle::State_Open) {
                 //Show disclosure triangle (open)
                 QRect triangleRect = rect;
-                triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4);
-                triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4);
-                triangleRect.setSize(QSize(8, 8));
+                triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4 * getDPIScaling());
+                triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4 * getDPIScaling());
+                triangleRect.setSize(QSize(8 * getDPIScaling(), 8 * getDPIScaling()));
                 painter->setBrush(pal.color(QPalette::Window));
                 painter->setPen(pal.color(QPalette::WindowText));
                 painter->drawRect(triangleRect);
@@ -1297,7 +1297,6 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             if (item == NULL) return;
 
             painter->setPen(transparent);
-
             QPen textPen;
             if (option->state & QStyle::State_Selected) {
                 painter->setBrush(pal.brush(QPalette::Highlight));
@@ -1321,17 +1320,17 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
 
             QRect iconRect, textRect = rect;
 
-            textRect.setHeight(rect.height() - 2);
+            textRect.setHeight(rect.height() - 2 * getDPIScaling());
             if (!item->icon.isNull()) {
                 iconRect.setSize(((QAbstractItemView*) widget)->iconSize());
                 QIcon icon = item->icon;
                 QImage iconImage = icon.pixmap(iconRect.size()).toImage();
-                iconRect.moveLeft(rect.left() + 2);
+                iconRect.moveLeft(rect.left() + 2 * getDPIScaling());
                 iconRect.moveTop(rect.top() + (rect.height() / 2) - (iconRect.height() / 2));
                 painter->drawImage(iconRect, iconImage);
-                textRect.setLeft(iconRect.right() + 6);
+                textRect.setLeft(iconRect.right() + 6 * getDPIScaling());
             } else {
-                textRect.setLeft(rect.left() + 6);
+                textRect.setLeft(rect.left() + 6 * getDPIScaling());
             }
 
 
@@ -1472,10 +1471,10 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             painter->setPen(pal.color(QPalette::Foreground));
             if (bar->direction == Qt::LeftToRight) {
                 painter->drawLine(rect.topLeft(), rect.bottomLeft());
-                painter->drawLine(rect.left() + 2, rect.top(), rect.left() + 2, rect.bottom());
+                painter->drawLine(rect.left() + 2 * getDPIScaling(), rect.top(), rect.left() + 2 * getDPIScaling(), rect.bottom());
             } else if (bar->direction == Qt::RightToLeft) {
                 painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-                painter->drawLine(rect.left(), rect.bottom() + 2, rect.right(), rect.bottom() + 2);
+                painter->drawLine(rect.left(), rect.bottom() + 2 * getDPIScaling(), rect.right(), rect.bottom() + 2 * getDPIScaling());
             }
             break;
         }
@@ -1485,8 +1484,8 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
 
             QPolygon pol;
             pol.append(rect.bottomRight());
-            pol.append(QPoint(rect.right(), rect.bottom() - 4));
-            pol.append(QPoint(rect.right() - 4, rect.bottom()));
+            pol.append(QPoint(rect.right(), rect.bottom() - 4 * getDPIScaling()));
+            pol.append(QPoint(rect.right() - 4 * getDPIScaling(), rect.bottom()));
 
             painter->drawPolygon(pol);
 
@@ -1519,7 +1518,7 @@ QStyle::SubControl Style::hitTestComplexControl(ComplexControl cc, const QStyleO
         if (slider == NULL) return QStyle::SC_None;
 
         QRect selection = rect;
-        selection.adjust(1, 1, -2, -2);
+        selection.adjust(1 * getDPIScaling(), 1 * getDPIScaling(), -2 * getDPIScaling(), -2 * getDPIScaling());
         selection.setWidth((((float) slider->sliderPosition - (float) slider->minimum) / ((float) slider->maximum - (float) slider->minimum)) * (float) selection.width());
 
         QRect thumb = rect;
@@ -1564,17 +1563,17 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
     switch (ct) {
         case CT_LineEdit:
         {
-            size.setHeight(size.height() + 5);
+            size.setHeight(size.height() + 5 * getDPIScaling());
             return size;
         }
         case CT_MenuBarItem:
         {
             if (touchMode) {
-                size.setHeight(size.height() + 20);
+                size.setHeight(size.height() + 20 * getDPIScaling());
             } else {
-                size.setHeight(size.height() + 10);
+                size.setHeight(size.height() + 10 * getDPIScaling());
             }
-            size.setWidth(size.width() + 20);
+            size.setWidth(size.width() + 20 * getDPIScaling());
             return size;
         }
         case CT_ScrollBar:
@@ -1585,9 +1584,9 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
             }
 
             if (size.width() > size.height()) { //Horizontal
-                size.setHeight(width);
+                size.setHeight(width * getDPIScaling());
             } else { //Vertical
-                size.setWidth(width);
+                size.setWidth(width * getDPIScaling());
             }
             return size;
         }
@@ -1601,19 +1600,19 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
             if (item->icon.isNull()) {
                 QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
                 if (iconSize.isNull()) {
-                    iconSize = QSize(16, 16);
+                    iconSize = QSize(16 * getDPIScaling(), 16 * getDPIScaling());
                 }
-                size.setHeight(opt->fontMetrics.height() + 6);
-                size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 32);
+                size.setHeight(opt->fontMetrics.height() + 6 * getDPIScaling());
+                size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 32 * getDPIScaling());
             } else {
                 QAbstractItemView* wid = (QAbstractItemView*) widget;
                 QSize iconSize = item->icon.actualSize(wid->iconSize());
-                size.setHeight(opt->fontMetrics.height() + iconSize.height() + 6);
-                size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 16);
+                size.setHeight(opt->fontMetrics.height() + iconSize.height() + 6 * getDPIScaling());
+                size.setWidth(opt->fontMetrics.width(text) + iconSize.width() + 16 * getDPIScaling());
             }
 
             if (touchMode) {
-                size.setHeight(size.height() + 20);
+                size.setHeight(size.height() + 20 * getDPIScaling());
             }
             return size;
         }
@@ -1621,22 +1620,22 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
         case CT_ToolButton:
         {
             if (touchMode) {
-                size.setHeight(contentsSize.height() + 30);
+                size.setHeight(contentsSize.height() + 30 * getDPIScaling());
             } else {
-                size.setHeight(contentsSize.height() + 20);
+                size.setHeight(contentsSize.height() + 20 * getDPIScaling());
             }
-            size.setWidth(contentsSize.width() + 20);
+            size.setWidth(contentsSize.width() + 20 * getDPIScaling());
             return size;
         }
         case CT_TabBarTab:
         {
-            size.setHeight(contentsSize.height() + 10);
-            size.setWidth(contentsSize.width() + 10);
+            size.setHeight(contentsSize.height() + 10 * getDPIScaling());
+            size.setWidth(contentsSize.width() + 10 * getDPIScaling());
             return size;
         }
         case CT_ProgressBar:
         {
-            size.setHeight(10);
+            size.setHeight(10 * getDPIScaling());
             return size;
         }
         case CT_MenuItem:
@@ -1646,11 +1645,11 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
 
             if (item->menuItemType == QStyleOptionMenuItem::Normal ||
                     (item->menuItemType == QStyleOptionMenuItem::Separator && item->text != "")) {
-                size.setHeight(item->fontMetrics.height() + 6);
+                size.setHeight(item->fontMetrics.height() + 6 * getDPIScaling());
                 if (touchMode) {
-                    size.setHeight(size.height() + 10);
+                    size.setHeight(size.height() + 10 * getDPIScaling());
                 }
-                size.setWidth(item->fontMetrics.width(item->text) + 28);
+                size.setWidth(item->fontMetrics.width(item->text) + 28 * getDPIScaling());
             } else {
                 size = QCommonStyle::sizeFromContents(ct, opt, size, widget);
             }
@@ -1668,13 +1667,13 @@ int Style::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w, QS
     case QStyle::SH_MenuBar_MouseTracking:
     case QStyle::SH_Menu_SloppySubMenus:
     case QStyle::SH_RubberBand_Mask:
-    case QStyle::SH_ScrollBar_Transient:
     case QStyle::SH_ComboBox_ListMouseTracking:
     case QStyle::SH_Menu_SupportsSections:
     case QStyle::SH_Slider_StopMouseOverSlider:
     case QStyle::SH_Widget_Animate:
     case QStyle::SH_Menu_KeyboardSearch:
     case QStyle::SH_DialogButtonBox_ButtonsHaveIcons:
+    case QStyle::SH_ScrollBar_Transient:
         return true;
     case QStyle::SH_MessageBox_CenterButtons:
     case QStyle::SH_Slider_SnapToValue:
@@ -1690,7 +1689,7 @@ int Style::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w, QS
 }
 
 int Style::layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption *option, const QWidget *widget) const {
-    return 9;
+    return 9 * getDPIScaling();
 }
 
 void Style::scheduleRepaint(const QWidget *widget, int after) const {
@@ -1756,7 +1755,7 @@ QString Style::currentType(QString id) const {
 int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *widget) const {
     switch (m) {
     case PM_MessageBoxIconSize:
-        return 64;
+        return 64 * getDPIScaling();
     case PM_SubMenuOverlap:
         return 0;
     case PM_MenuPanelWidth:
@@ -1770,15 +1769,15 @@ int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *wi
         return 0;
     case PM_MenuHMargin:
     case PM_MenuVMargin:
-        return 1;
+        return 1 * getDPIScaling();
     case PM_CheckBoxLabelSpacing:
     case PM_RadioButtonLabelSpacing:
-        return 4;
+        return 4 * getDPIScaling();
     case PM_ToolBarIconSize:
     case PM_SliderControlThickness:
-        return 16;
+        return 16 * getDPIScaling();
     case PM_ScrollView_ScrollBarOverlap:
-        return 5;
+        return 5 * getDPIScaling();
     default:
         return QCommonStyle::pixelMetric(m, opt, widget);
     }
@@ -1799,4 +1798,10 @@ void Style::drawItemText(QPainter *painter, const QRect &rect, int alignment, co
     //painter->setPen(palette.color(enabled ? QPalette::Normal : QPalette::Disabled, textRole));
     //painter->drawText(rect, alignment, text);
     QCommonStyle::drawItemText(painter, rect, alignment, palette, enabled, text, textRole);
+}
+
+
+float Style::getDPIScaling() const {
+    float currentDPI = QApplication::desktop()->logicalDpiX();
+    return currentDPI / (float) 96;
 }

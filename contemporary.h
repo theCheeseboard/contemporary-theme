@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QTimer>
 #include <QGraphicsColorizeEffect>
+#include <QDesktopWidget>
 #include <tvariantanimation.h>
 
 //Include controls
@@ -60,6 +61,8 @@ private:
     mutable QVariantList animations;
     mutable QStringList animationTypes;
     mutable QStringList animationIds;
+
+    float getDPIScaling() const;
 
     QSettings* settings;
     bool touchMode = false;
