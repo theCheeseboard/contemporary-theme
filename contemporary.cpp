@@ -634,7 +634,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         const QStyleOptionTab* item = qstyleoption_cast<const QStyleOptionTab*>(option);
         if (item == NULL) return;
 
-        QRect shapeRect = rect;
+        /*QRect shapeRect = rect;
         shapeRect.adjust(0, 0, 0, -1);
 
         painter->setPen(pal.color(QPalette::WindowText));
@@ -673,7 +673,30 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
 
         if (element == QStyle::CE_TabBarTabShape) {
             break;
+        }*/
+
+        //const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
+        //if (button == NULL) return;
+        //QRect paintRect = rect.adjusted(0, 0, 0, -2);
+        QRect paintRect = rect;
+        QBrush brush;
+
+        if (item->state & QStyle::State_Enabled) {
+            brush = QBrush(pal.color(QPalette::Button));
+        } else {
+            brush = QBrush(pal.color(QPalette::Disabled, QPalette::Button));
         }
+
+        if (item->state & QStyle::State_MouseOver) {
+            brush = QBrush(pal.color(QPalette::Button).lighter());
+        }
+
+        if (item->state & QStyle::State_Sunken || item->state & QStyle::State_Selected) {
+            brush = QBrush(pal.color(QPalette::Button).darker(150));
+        }
+
+        painter->setBrush(brush);
+        painter->drawRect(paintRect);
 
         //Fall through
     }
@@ -682,18 +705,21 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         const QStyleOptionTab* item = qstyleoption_cast<const QStyleOptionTab*>(option);
         if (item == NULL) return;
 
+        //QRect paintRect = rect.adjusted(0, 0, 0, -2);
+        QRect paintRect = rect;
+
         QString text = item->text;
         text.remove("&");
         painter->setPen(pal.color(QPalette::WindowText));
-        painter->drawText(rect, Qt::AlignCenter, text);
+        painter->drawText(paintRect, Qt::AlignCenter, text);
 
         if (!item->icon.isNull()) {
-            QRect iconRect = rect;
+            QRect iconRect = paintRect;
             iconRect.adjust(4 * getDPIScaling(), 0, 4 * getDPIScaling(), 0);
             iconRect.adjust(item->leftButtonSize.width() + 8 * getDPIScaling(), 0, item->leftButtonSize.width() + 8 * getDPIScaling(), 0);
 
             iconRect.setSize(item->iconSize);
-            iconRect.moveTop((rect.height() / 2) - (item->iconSize.height() / 2));
+            iconRect.moveTop((paintRect.height() / 2) - (item->iconSize.height() / 2));
 
             painter->drawImage(iconRect, item->icon.pixmap(item->iconSize).toImage());
         }
@@ -1141,7 +1167,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         case QStyle::PE_FrameTabWidget:
         case QStyle::PE_FrameTabBarBase:
         {
-            const QStyleOptionTabWidgetFrame* item = qstyleoption_cast<const QStyleOptionTabWidgetFrame*>(option);
+            /*const QStyleOptionTabWidgetFrame* item = qstyleoption_cast<const QStyleOptionTabWidgetFrame*>(option);
             if (item == NULL) return;
 
             rect.adjust(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling());
@@ -1171,7 +1197,13 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
                 painter->drawLine(rect.left(), rect.top() + tabBarHeight, rect.left(), rect.bottom());
             } else {
                 painter->drawLine(rect.topLeft(), rect.bottomLeft());
-            }
+            }*/
+            /*rect.adjust(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling());
+            painter->setPen(pal.color(QPalette::WindowText));
+            painter->drawLine(rect.topLeft(), rect.topRight());
+            painter->drawLine(rect.topRight(), rect.bottomRight());
+            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            painter->drawLine(rect.topLeft(), rect.bottomLeft());*/
 
             break;
         }
