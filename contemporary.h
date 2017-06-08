@@ -64,7 +64,7 @@ private:
 
     float getDPIScaling() const;
 
-    QSettings* settings;
+    QSettings *settings, *tsSettings;
     bool touchMode = false;
     //mutable QMap<QString, int> currentAnimations;
 };

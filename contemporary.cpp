@@ -3,6 +3,8 @@
 Style::Style()
 {
     settings = new QSettings("theSuite", "contemporary_widget", this);
+    tsSettings = new QSettings("theSuite", "theShell");
+
     indeterminateTimer = new QTimer(this);
     if (theLibsGlobal::instance()->powerStretchEnabled()) {
         indeterminateTimer->setInterval(1000 / 5);
@@ -25,6 +27,7 @@ Style::Style()
             indeterminateTimer->setInterval(1000 / 60);
         }
     });
+    touchMode = tsSettings->value("input/touch", false).toBool();
 }
 
 Style::~Style() {
@@ -103,7 +106,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                 }
 
                 if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
-                    brush = QBrush(pal.color(QPalette::Window).darker());
+                    brush = QBrush(pal.color(QPalette::Window).darker(150));
                 }
                 textPen = pal.color(QPalette::WindowText);
             } else {
@@ -122,7 +125,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
                 }
 
                 if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
-                    brush = QBrush(pal.color(QPalette::Button).darker());
+                    brush = QBrush(pal.color(QPalette::Button).darker(150));
                 }
                 textPen = pal.color(QPalette::ButtonText);
             }
@@ -185,7 +188,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         }
 
         if (button->state & QStyle::State_Sunken) {
-            brush = QBrush(pal.color(QPalette::Window).darker());
+            brush = QBrush(pal.color(QPalette::Window).darker(150));
         }
 
         painter->setBrush(brush);
@@ -265,7 +268,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         }
 
         if (button->state & QStyle::State_Sunken) {
-            brush = QBrush(pal.color(QPalette::Window).darker());
+            brush = QBrush(pal.color(QPalette::Window).darker(150));
         }
         painter->setBrush(brush);
         painter->drawEllipse(checkArea);
@@ -634,45 +637,45 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         QRect shapeRect = rect;
         shapeRect.adjust(0, 0, 0, -1);
 
+        painter->setPen(pal.color(QPalette::WindowText));
         if (item->state & QStyle::State_Selected) {
-            painter->setPen(transparent);
-            //painter->setBrush(pal.brush(QPalette::Highlight));
-            QLinearGradient gradient;
-            gradient.setStart(shapeRect.topLeft());
-            gradient.setFinalStop(shapeRect.bottomLeft());
-            gradient.setColorAt(0, pal.color(QPalette::Highlight));
-            gradient.setColorAt(1, pal.color(QPalette::Window));
-            painter->setBrush(gradient);
-            painter->drawRect(shapeRect);
-            painter->setPen(pal.color(QPalette::HighlightedText));
-        } else {
-            painter->setPen(pal.color(QPalette::WindowText));
-        }
+            if (item->shape == QTabBar::RoundedNorth ||
+                    item->shape == QTabBar::RoundedEast ||
+                    item->shape == QTabBar::RoundedWest) {
+                painter->drawLine(shapeRect.topLeft(), shapeRect.topRight());
+            }
 
-        if (item->shape == QTabBar::RoundedNorth ||
-                item->shape == QTabBar::RoundedEast ||
-                item->shape == QTabBar::RoundedWest) {
+            if (item->shape == QTabBar::RoundedSouth ||
+                    item->shape == QTabBar::RoundedEast ||
+                    item->shape == QTabBar::RoundedWest) {
+                painter->drawLine(shapeRect.bottomLeft(), shapeRect.bottomRight());
+            }
+
+            if (item->shape == QTabBar::RoundedSouth ||
+                    item->shape == QTabBar::RoundedNorth ||
+                    item->shape == QTabBar::RoundedWest) {
+                painter->drawLine(shapeRect.topLeft(), shapeRect.bottomLeft());
+            }
+
+            if (item->shape == QTabBar::RoundedSouth ||
+                    item->shape == QTabBar::RoundedEast ||
+                    item->shape == QTabBar::RoundedNorth) {
+                painter->drawLine(shapeRect.topRight(), shapeRect.bottomRight());
+            }
+        } else {
+            painter->setBackground(pal.brush(QPalette::Window));
+            //painter->drawRect(shapeRect);
             painter->drawLine(shapeRect.topLeft(), shapeRect.topRight());
-        }
-        if (item->shape == QTabBar::RoundedSouth ||
-                item->shape == QTabBar::RoundedEast ||
-                item->shape == QTabBar::RoundedWest) {
-            painter->drawLine(shapeRect.bottomLeft(), shapeRect.bottomRight());
-        }
-        if (item->shape == QTabBar::RoundedSouth ||
-                item->shape == QTabBar::RoundedNorth ||
-                item->shape == QTabBar::RoundedWest) {
             painter->drawLine(shapeRect.topRight(), shapeRect.bottomRight());
-        }
-        if (item->shape == QTabBar::RoundedSouth ||
-                item->shape == QTabBar::RoundedEast ||
-                item->shape == QTabBar::RoundedNorth) {
-            painter->drawLine(shapeRect.topLeft(), shapeRect.bottomLeft());
+            painter->drawLine(shapeRect.bottomRight(), shapeRect.bottomLeft());
+            painter->drawLine(shapeRect.bottomLeft(), shapeRect.topLeft());
         }
 
         if (element == QStyle::CE_TabBarTabShape) {
             break;
         }
+
+        //Fall through
     }
     case QStyle::CE_TabBarTabLabel:
     {
@@ -836,7 +839,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         QBrush brush;
 
         if (item->state & QStyle::State_Item) {
-            brush = QBrush(pal.color(QPalette::Highlight).darker());
+            brush = QBrush(pal.color(QPalette::Highlight).darker(150));
         } else {
             if (item->state & QStyle::State_Enabled) {
                 brush = QBrush(pal.color(QPalette::Window));
@@ -853,7 +856,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             }
 
             if (item->state & QStyle::State_On) {
-                brush = QBrush(pal.color(QPalette::Highlight).darker());
+                brush = QBrush(pal.color(QPalette::Highlight).darker(150));
             }
         }
         painter->setBrush(brush);
@@ -933,7 +936,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
                 }
 
                 if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
-                    brush = QBrush(pal.color(QPalette::Window).darker());
+                    brush = QBrush(pal.color(QPalette::Window).darker(150));
                 }
             }
             textPen = pal.color(QPalette::WindowText);
@@ -1071,7 +1074,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         //Draw border
         painter->setPen(pal.color(QPalette::WindowText));
         painter->setBrush(pal.color(QPalette::Window));
-        painter->drawRect(rect.adjusted(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling()));
+        painter->drawRect(rect.adjusted(0, 0, -1, -1));
 
         //Draw selected portion
         QRect selection = rect;
@@ -1087,7 +1090,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
         thumb.moveLeft(selection.right() - (thumb.width() / 2));
 
         if (slider->state & State_On || slider->state & State_Sunken) {
-            QColor highlightColor = pal.color(QPalette::Highlight).darker();
+            QColor highlightColor = pal.color(QPalette::Highlight).darker(150);
             painter->setPen(pal.color(QPalette::HighlightedText));
             painter->setBrush(highlightColor);
         } else if (slider->activeSubControls & QStyle::SC_SliderHandle) {
@@ -1129,17 +1132,47 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
 
     switch (primitive) {
         case QStyle::PE_FrameGroupBox:
-        case QStyle::PE_FrameTabWidget:
         case QStyle::PE_FrameDockWidget:
         {
             painter->setPen(pal.color(QPalette::WindowText));
             painter->drawRect(rect.adjusted(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling()));
             break;
         }
+        case QStyle::PE_FrameTabWidget:
         case QStyle::PE_FrameTabBarBase:
         {
+            const QStyleOptionTabWidgetFrame* item = qstyleoption_cast<const QStyleOptionTabWidgetFrame*>(option);
+            if (item == NULL) return;
+
+            rect.adjust(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling());
+            int tabBarWidth = item->tabBarRect.width();
+            int tabBarHeight = item->tabBarRect.height();
+
             painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            if (item->shape == QTabBar::RoundedNorth) {
+                painter->drawLine(rect.left() + tabBarWidth, rect.top(), rect.right(), rect.top());
+            } else {
+                painter->drawLine(rect.topLeft(), rect.topRight());
+            }
+
+            if (item->shape == QTabBar::RoundedEast) {
+                painter->drawLine(rect.right(), rect.top() + tabBarHeight, rect.right(), rect.bottom());
+            } else {
+                painter->drawLine(rect.topRight(), rect.bottomRight());
+            }
+
+            if (item->shape == QTabBar::RoundedSouth) {
+                painter->drawLine(rect.left() + tabBarWidth, rect.bottom(), rect.right(), rect.bottom());
+            } else {
+                painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            }
+
+            if (item->shape == QTabBar::RoundedWest) {
+                painter->drawLine(rect.left(), rect.top() + tabBarHeight, rect.left(), rect.bottom());
+            } else {
+                painter->drawLine(rect.topLeft(), rect.bottomLeft());
+            }
+
             break;
         }
         /*case QStyle::PE_FrameTabWidget:
@@ -1425,7 +1458,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
                 }
 
                 if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
-                    brush = QBrush(pal.color(QPalette::Window).darker());
+                    brush = QBrush(pal.color(QPalette::Window).darker(150));
                 }
                 textPen = pal.color(QPalette::WindowText);
             }
@@ -1448,7 +1481,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             }
 
             if (button->state & QStyle::State_Sunken) {
-                brush = QBrush(pal.color(QPalette::Window).darker());
+                brush = QBrush(pal.color(QPalette::Window).darker(150));
             }
 
             if (button->state & QStyle::State_On) {
