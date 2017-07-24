@@ -1,0 +1,21 @@
+spinbutton entry {
+    border: none;
+}
+
+spinbutton.horizontal entry {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+spinbutton.vertical entry {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+spinbutton button {
+    background-color: @theme_bg_color;
+}
+
+spinbutton {
+    border: 1px solid;
+}

@@ -1,0 +1,13 @@
+notebook > header tabs > tab {
+    padding: 9px;
+    background-color: @theme_accent_bg_color;
+}
+
+notebook > header tabs > tab:hover {
+    padding: 9px;
+    background-color: @theme_accent_bg_hover;
+}
+
+notebook stack {
+    border: 1px solid;
+}

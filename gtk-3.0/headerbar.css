@@ -1,0 +1,12 @@
+headerbar button {
+    background-color: @theme_bg_color;
+    margin: 0px;
+}
+
+revealer box label {
+    padding: 8px;
+}
+
+headerbar separator {
+    background-color: @theme_bg_color;
+}

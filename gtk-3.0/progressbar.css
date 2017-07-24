@@ -1,0 +1,17 @@
+progressbar trough {
+    
+}
+
+progressbar progress {
+    background-color: @theme_accent_bg_color;
+}
+
+progressbar.horizontal trough,
+progressbar.horizontal progress {
+    min-height: 15px;
+}
+
+progressbar.vertical trough,
+progressbar.vertical progress {
+    min-width: 15px;
+}

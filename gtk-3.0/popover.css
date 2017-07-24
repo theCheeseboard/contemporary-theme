@@ -1,0 +1,17 @@
+popover {
+    border: 1px solid @theme_fg_color;
+    padding: 1px;
+    background-color: @theme_bg_color;
+}
+
+popover menuitem {
+    padding: 4px;
+}
+
+decoration {
+    border: 1px solid @theme_fg_color;
+}
+
+modelbutton {
+    padding: 4px;
+}

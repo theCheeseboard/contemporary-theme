@@ -1,0 +1,6 @@
+paned > seperator {
+    min-width: 3px;
+    min-height: 3px;
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+}

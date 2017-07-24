@@ -1,0 +1,106 @@
+* {
+    color: inherit;
+    background-color: inherit;
+    border-color: @theme_fg_color;
+}
+
+/*
+*:not(menuitem)
+:active {
+    background-color: @theme_bg_active;
+}
+
+*:not(menuitem)
+:hover:not(:active) {
+    background-color: @theme_bg_hover;
+}*/
+
+*:selected {
+    background-color: @theme_bg_active;
+}
+
+*:checked {
+    background-color: @theme_bg_active;
+}
+
+*:disabled {
+    opacity: 0.5;
+}
+
+window, dialog {
+    color: @theme_fg_color;
+    background-color: @theme_bg_color;
+}
+
+.background, viewport {
+    background-color: @theme_bg_color;
+}
+
+scrollbar {
+    background-color: @theme_accent_bg_color;
+}
+
+progressbar {
+    border: 1px solid;
+}
+    
+progressbar.trough {
+    background-color: @theme_bg_color;
+    /*border-color: rgba(61, 174, 233, 0.5);*/
+}
+
+selection {
+    background-color: @theme_selected_bg_color;
+}
+
+border {
+    border: 1px solid;
+}
+
+statusbar frame border {
+    border: none;
+}
+
+separator {
+    background-color: @theme_fg_color;
+    min-width: 1px;
+    min-height: 1px;
+}
+
+scrolledwindow {
+    border: 1px solid;
+}
+
+rubberband {
+    border: 1px solid @theme_accent_bg_color;
+    background-color: @theme_accent_bg_color;
+    opacity: 0.5;
+}
+
+circular {
+    border-radius: 30px;
+}
+
+monospace {
+    font-family: "Hack", monospace;
+}
+
+@import url("buttons.css");
+@import url("headerbar.css");
+@import url("popover.css");
+@import url("textview.css");
+@import url("scrollbar.css");
+@import url("switch.css");
+@import url("menu.css");
+@import url("calendar.css");
+@import url("appnotification.css");
+@import url("progressbar.css");
+@import url("notebook.css");
+@import url("paned.css");
+@import url("dialogs.css");
+@import url("spinbutton.css");
+@import url("list.css");
+@import url("scale.css");
+@import url("shoot.css");
+@import url("titlebuttons.css");
+@import url("combobox.css");

@@ -1,0 +1,33 @@
+/* Define colours */
+
+@define-color bg-color #282828;
+@define-color fg-color white;
+@define-color bg-hover #3c3c3c;
+@define-color bg-active #1b1b1b;
+@define-color accent-color rgb(0, 50, 150);
+@define-color accent-fg white;
+@define-color accent-hover #004be1;
+@define-color accent-active #002164;
+@define-color link-color rgb(0, 200, 255);
+@define-color link-active rgb(255, 100, 100);
+@define-color selection rgb(0, 80, 170);
+
+@define-color theme_bg_color @bg-color;
+@define-color theme_fg_color @fg-color;
+@define-color theme_base_color @bg-color;
+@define-color theme_text_color @fg-color;
+@define-color theme_selected_bg_color rgb(0, 80, 170);
+@define-color theme_selected_fg_color @accent-fg;
+@define-color theme_tooltip_bg_color @bg-color;
+@define-color theme_tooltip_fg_color @fg-color;
+@define-color theme_bg_hover @bg-hover;
+@define-color theme_bg_active @bg-active;
+
+@define-color theme_accent_bg_color @accent-color;
+@define-color theme_accent_fg_color @accent-fg;
+@define-color theme_accent_bg_hover @accent-hover;
+@define-color theme_accent_bg_active @accent-active;
+
+@define-color link_color @link-color;
+
+@import url("gtk-widgets.css");

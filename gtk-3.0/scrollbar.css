@@ -1,0 +1,19 @@
+scrollbar, scrollbar:hover {
+    -GtkScrollbar-has-backward-stepper: false;
+    -GtkScrollbar-has-forward-stepper: false;
+    background-color: @theme_bg_color;
+}
+
+scrollbar trough {
+    background-color: @theme_bg_color;
+}
+
+scrollbar slider {
+    background-color: @theme_accent_bg_color;
+    min-height: 6px;
+    min-width: 6px;
+}
+
+scrollbar button {
+    background-color: @theme_bg_color;
+}

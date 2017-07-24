@@ -1,0 +1,46 @@
+menubar {
+    -GtkWidget-window-dragging: true;
+}
+
+menubar menuitem {
+    padding: 8px;
+}
+
+menuitem:hover {
+    background: @theme_accent_bg_color;
+}
+
+menu {
+    border: 1px solid;
+    padding: 1px;
+}
+
+menu menuitem {
+    padding: 4px;
+}
+
+menu seperator {
+    color: @theme_fg_color;
+    min-height: 2px;
+}
+
+menuitem accelerator {
+    padding-left: 10px;
+}
+
+menu arrow {
+    min-height: 16px;
+    min-width: 16px;
+}
+
+menu arrow:dir(ltr) {
+    -gtk-icon-source: -gtk-icontheme("pan-end-symbolic");
+}
+
+menu arrow.top {
+    -gtk-icon-source: -gtk-icontheme("pan-up-symbolic");
+}
+
+menu arrow.bottom {
+    -gtk-icon-source: -gtk-icontheme("pan-down-symbolic");
+}

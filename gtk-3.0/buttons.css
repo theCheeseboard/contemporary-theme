@@ -1,0 +1,68 @@
+button {
+    padding: 9px;
+}
+
+modelbutton.flat:active {
+    background-color: @theme_bg_active;
+}
+
+modelbutton.flat:hover:not(:active) {
+    background-color: @theme_bg_hover;
+}
+
+:not(flat) button, :not(flat) button cellview {
+    background-color: @theme_accent_bg_color;
+}
+
+:not(flat) button:active, :not(flat) button:active cellview {
+    background-color: @theme_accent_bg_active;
+}
+
+:not(flat) button:hover:not(:active), :not(flat) button:hover:not(:active) cellview {
+    background-color: @theme_accent_bg_hover;
+}
+
+:not(flat) button:checked, :not(flat) button:checked cellview {
+    background-color: @theme_accent_bg_active;
+}
+
+button.suggested-action {
+    background-color: rgb(0, 200, 0);
+}
+
+button.suggested-action:active {
+    background-color: rgb(0, 150, 0);
+}
+
+button.suggested-action:hover:not(:active) {
+    background-color: rgb(0, 250, 0);
+}
+
+button.destructive-action {
+    background-color: rgb(200, 0, 0);
+}
+
+button.destructive-action:active {
+    background-color: rgb(150, 0, 0);
+}
+
+button.destructive-action:hover:not(:active) {
+    background-color: rgb(250, 0, 0);
+}
+
+button:link {
+    color: @link_color;
+    text-decoration: underline;
+    background-color: @theme_bg_color;
+}
+
+button:link:active {
+    background-color: @theme_bg_color;
+}
+
+button:link:hover:not(:active) {
+    background-color: @theme_bg_color;
+}
+
+@import url("buttons/checkboxes.css");
+@import url("buttons/radios.css");

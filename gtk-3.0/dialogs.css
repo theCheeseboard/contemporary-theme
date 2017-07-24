@@ -1,0 +1,7 @@
+messagedialog {
+    background-color: @theme_bg_color;
+}
+
+filedialog {
+    background-color: @theme_bg_color;
+}

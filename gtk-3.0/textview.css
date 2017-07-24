@@ -1,0 +1,10 @@
+entry {
+    border-left: 1px solid;
+    border-bottom: 1px solid;
+    padding: 2px;
+}
+
+textview {
+    padding: 2px;
+    border: 1px solid;
+}

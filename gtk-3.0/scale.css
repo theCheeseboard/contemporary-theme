@@ -1,0 +1,30 @@
+scale {
+    background-color: @theme_bg_color;
+}
+
+scale:hover {
+    background-color: @theme_bg_color;
+}
+
+scale slider {
+    border: 1px solid;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+scale trough {
+    border: 1px solid;
+    background-color: @theme_bg_color;
+}
+
+scale trough:hover {
+    background-color: @theme_bg_color;
+}
+
+scale highlight {
+    background-color: @theme_selected_bg_color;
+}
+
+scale highlight:hover {
+    background-color: @theme_selected_bg_color;
+}

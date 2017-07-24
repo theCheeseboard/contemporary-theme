@@ -1,0 +1,19 @@
+switch {
+    border: 1px solid;
+}
+
+switch:hover {
+    background-color: @theme_bg_color;
+}
+
+switch:active {
+    background-color: @theme_bg_color;
+}
+
+switch:checked {
+    background-color: @theme_accent_bg_color;
+}
+
+switch slider {
+    background-color: @theme_fg_color;
+}
