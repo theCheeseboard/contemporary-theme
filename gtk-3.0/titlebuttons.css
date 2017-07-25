@@ -1,19 +1,2 @@
 headerbar box.horizontal.right {
 }
-
-button.titlebutton.close {
-    border-bottom-left-radius: 50%;
-    background-color: @theme_fg_color;
-}
-
-button.titlebutton.image {
-    opacity: 0;
-}
-
-button.titlebutton.close:hover {
-    background-color: rgb(255, 100, 100);
-}
-
-button.titlebutton.close:active {
-    background-color: rgb(200, 0, 0);
-}
