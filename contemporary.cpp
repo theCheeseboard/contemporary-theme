@@ -32,6 +32,8 @@ Style::Style()
 
 Style::~Style() {
     theLibsGlobal::instance()->disconnect();
+    indeterminateTimer->deleteLater();
+    settings->deleteLater();
 }
 
 void Style::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
@@ -152,17 +154,11 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             iconRect.setSize(button->iconSize);
 
             //textRect.adjust(button->iconSize.width() / 2, 0, 0, 0);
-            textRect.moveLeft(iconRect.right());
+            textRect.moveLeft(iconRect.right() + 4 * getDPIScaling());
 
             QIcon icon = button->icon;
             QImage image = icon.pixmap(button->iconSize).toImage();
             image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-            /*if (image.colorCount() == 0) {
-                QPainter colorizer(&image);
-                colorizer.setCompositionMode(QPainter::CompositionMode_SourceIn);
-                colorizer.fillRect(image.rect(), textPen.brush());
-                colorizer.end();
-            }*/
             tintImage(image, textPen.color());
 
             painter->drawImage(iconRect, image);
@@ -197,32 +193,10 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         if (button->state & QStyle::State_On) {
             painter->setPen(transparent);
             painter->setBrush(pal.color(QPalette::WindowText));
-            //painter->drawRect(checkArea.adjusted(2, 2, -1, -1));
-
-            /*QRect selectionArea = checkArea.adjusted(2, 2, -1, -1);
-
-            QPolygon triangle;
-            triangle.append(selectionArea.topLeft());
-            triangle.append(selectionArea.bottomLeft());
-            triangle.append(QPoint(selectionArea.left() + (selectionArea.height() / 2), selectionArea.top() + (selectionArea.height() / 2)));
-            painter->drawPolygon(triangle);*/
             painter->drawRect(checkArea);
 
             QRect tickArea = checkArea;
             tickArea.adjust(3 * getDPIScaling(), 3 * getDPIScaling(), -1 * getDPIScaling(), -1 * getDPIScaling());
-
-            /*QPen pen = pal.color(QPalette::Window);
-            pen.setWidth(1);
-            painter->setPen(pen);
-
-            QPoint p1, p2, p3;
-            p1 = QPoint(tickArea.left(), tickArea.bottom() - (tickArea.height() / 2));
-            p2 = QPoint(tickArea.left() + (tickArea.width() / 4) + (tickArea.width() / 6), tickArea.bottom() - (tickArea.height() / 4));
-            //p2 = QPoint(tickArea.left() + (tickArea.width() / 4), tickArea.bottom());
-            p3 = QPoint(tickArea.right(), tickArea.top() + (tickArea.height() / 4));
-
-            painter->drawLine(p1, p2);
-            painter->drawLine(p2, p3);*/
         } else if (button->state & QStyle::State_NoChange) {
             QPolygon triangle;
             triangle.append(checkArea.topLeft());
@@ -634,50 +608,6 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         const QStyleOptionTab* item = qstyleoption_cast<const QStyleOptionTab*>(option);
         if (item == NULL) return;
 
-        /*QRect shapeRect = rect;
-        shapeRect.adjust(0, 0, 0, -1);
-
-        painter->setPen(pal.color(QPalette::WindowText));
-        if (item->state & QStyle::State_Selected) {
-            if (item->shape == QTabBar::RoundedNorth ||
-                    item->shape == QTabBar::RoundedEast ||
-                    item->shape == QTabBar::RoundedWest) {
-                painter->drawLine(shapeRect.topLeft(), shapeRect.topRight());
-            }
-
-            if (item->shape == QTabBar::RoundedSouth ||
-                    item->shape == QTabBar::RoundedEast ||
-                    item->shape == QTabBar::RoundedWest) {
-                painter->drawLine(shapeRect.bottomLeft(), shapeRect.bottomRight());
-            }
-
-            if (item->shape == QTabBar::RoundedSouth ||
-                    item->shape == QTabBar::RoundedNorth ||
-                    item->shape == QTabBar::RoundedWest) {
-                painter->drawLine(shapeRect.topLeft(), shapeRect.bottomLeft());
-            }
-
-            if (item->shape == QTabBar::RoundedSouth ||
-                    item->shape == QTabBar::RoundedEast ||
-                    item->shape == QTabBar::RoundedNorth) {
-                painter->drawLine(shapeRect.topRight(), shapeRect.bottomRight());
-            }
-        } else {
-            painter->setBackground(pal.brush(QPalette::Window));
-            //painter->drawRect(shapeRect);
-            painter->drawLine(shapeRect.topLeft(), shapeRect.topRight());
-            painter->drawLine(shapeRect.topRight(), shapeRect.bottomRight());
-            painter->drawLine(shapeRect.bottomRight(), shapeRect.bottomLeft());
-            painter->drawLine(shapeRect.bottomLeft(), shapeRect.topLeft());
-        }
-
-        if (element == QStyle::CE_TabBarTabShape) {
-            break;
-        }*/
-
-        //const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
-        //if (button == NULL) return;
-        //QRect paintRect = rect.adjusted(0, 0, 0, -2);
         QRect paintRect = rect;
         QBrush brush;
 
@@ -732,22 +662,28 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         if (item == NULL) return;
 
         switch (item->frameShape) {
-        case QFrame::StyledPanel:
-        {
-            painter->setBrush(pal.color(QPalette::Window));
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawRect(rect.adjusted(0, 0, -1, -1));
-            break;
-        }
-        case QFrame::HLine:
-        {
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.topLeft(), rect.topRight());
-            break;
-        }
-        case QFrame::VLine:
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.topLeft(), rect.bottomLeft());
+            case QFrame::StyledPanel:
+            {
+                painter->setBrush(pal.color(QPalette::Window));
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawRect(rect.adjusted(0, 0, -1, -1));
+                break;
+            }
+            case QFrame::HLine:
+            {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawLine(rect.topLeft(), rect.topRight());
+                break;
+            }
+            case QFrame::VLine:
+            {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawLine(rect.topLeft(), rect.bottomLeft());
+            }
+            default:
+                painter->setBrush(Qt::transparent);
+                painter->setPen(Qt::transparent);
+                painter->drawRect(rect.adjusted(0, 0, -1, -1));
         }
 
         break;
@@ -796,7 +732,34 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
         QRect iconRect = rect, textRect = rect;
 
         textRect.setHeight(rect.height() - 2);
-        if (!item->icon.isNull()) {
+
+        if (item->features & QStyleOptionViewItem::HasCheckIndicator) {
+            iconRect.setSize(QSize(16 * getDPIScaling(), 16 * getDPIScaling()));
+            iconRect.moveLeft(rect.left() + 2 * getDPIScaling());
+            iconRect.moveTop(rect.top() + 8 * getDPIScaling() - 8 * getDPIScaling());
+            textRect.setLeft(iconRect.right() + 6 * getDPIScaling());
+
+            //Draw checkbox
+            painter->setPen(pal.color(QPalette::WindowText));
+
+            painter->setBrush(QBrush(transparent));
+            painter->drawRect(iconRect);
+
+            if (item->checkState == Qt::Checked) {
+                painter->setPen(transparent);
+                painter->setBrush(pal.color(QPalette::WindowText));
+                painter->drawRect(iconRect);
+            } else if (item->checkState == Qt::PartiallyChecked) {
+                QPolygon triangle;
+                triangle.append(iconRect.topLeft());
+                triangle.append(iconRect.bottomLeft());
+                triangle.append(iconRect.topRight());
+
+                painter->setPen(transparent);
+                painter->setBrush(pal.color(QPalette::WindowText));
+                painter->drawPolygon(triangle);
+            }
+        } else if (!item->icon.isNull()) {
             QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
             //QSize iconSize(16, 16);
             if (!iconSize.isValid()) {
@@ -898,12 +861,20 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             painter->setPen(transparent);
 
             int halfHeight = rect.height() / 2;
-            rect.adjust(1 * getDPIScaling(), 1 * getDPIScaling(), -2 * getDPIScaling(), -2 * getDPIScaling());
 
             QPolygon triangle;
-            triangle.append(QPoint(rect.right(), rect.bottom()));
-            triangle.append(QPoint(rect.right(), rect.bottom() - halfHeight));
-            triangle.append(QPoint(rect.right() - halfHeight, rect.bottom()));
+
+            if (item->direction == Qt::LeftToRight) {
+                rect.adjust(1 * getDPIScaling(), 1 * getDPIScaling(), -2 * getDPIScaling(), -2 * getDPIScaling());
+                triangle.append(QPoint(rect.right(), rect.bottom()));
+                triangle.append(QPoint(rect.right(), rect.bottom() - halfHeight));
+                triangle.append(QPoint(rect.right() - halfHeight, rect.bottom()));
+            } else {
+                rect.adjust(2 * getDPIScaling(), 1 * getDPIScaling(), -1 * getDPIScaling(), -2 * getDPIScaling());
+                triangle.append(QPoint(rect.left(), rect.bottom()));
+                triangle.append(QPoint(rect.left(), rect.bottom() - halfHeight));
+                triangle.append(QPoint(rect.left() + halfHeight, rect.bottom()));
+            }
             painter->drawPolygon(triangle);
         //}
     }
@@ -1000,15 +971,16 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             textRect.setHeight(button->fontMetrics.height());
 
             if (!button->icon.isNull()) {
+                iconRect.setTop(rect.top() + (rect.height() / 2) - (button->iconSize.height() / 2));
+
                 int fullWidth = textRect.width() + button->iconSize.width();
-                int iconLeft = rect.left() + (rect.width() / 2) - (fullWidth / 2);
+                int iconLeft = rect.left() + iconRect.top(); // + (rect.width() / 2) - (fullWidth / 2);
 
                 iconRect.setLeft(iconLeft);
-                iconRect.setTop(rect.top() + (rect.height() / 2) - (button->iconSize.height() / 2));
                 iconRect.setSize(button->iconSize);
 
                 //textRect.adjust(button->iconSize.width() / 2, 0, 0, 0);
-                textRect.moveLeft(iconRect.right());
+                textRect.moveLeft(iconRect.right() + iconRect.top());
             }
             break;
         }
@@ -1164,57 +1136,6 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             painter->drawRect(rect.adjusted(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling()));
             break;
         }
-        case QStyle::PE_FrameTabWidget:
-        case QStyle::PE_FrameTabBarBase:
-        {
-            /*const QStyleOptionTabWidgetFrame* item = qstyleoption_cast<const QStyleOptionTabWidgetFrame*>(option);
-            if (item == NULL) return;
-
-            rect.adjust(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling());
-            int tabBarWidth = item->tabBarRect.width();
-            int tabBarHeight = item->tabBarRect.height();
-
-            painter->setPen(pal.color(QPalette::WindowText));
-            if (item->shape == QTabBar::RoundedNorth) {
-                painter->drawLine(rect.left() + tabBarWidth, rect.top(), rect.right(), rect.top());
-            } else {
-                painter->drawLine(rect.topLeft(), rect.topRight());
-            }
-
-            if (item->shape == QTabBar::RoundedEast) {
-                painter->drawLine(rect.right(), rect.top() + tabBarHeight, rect.right(), rect.bottom());
-            } else {
-                painter->drawLine(rect.topRight(), rect.bottomRight());
-            }
-
-            if (item->shape == QTabBar::RoundedSouth) {
-                painter->drawLine(rect.left() + tabBarWidth, rect.bottom(), rect.right(), rect.bottom());
-            } else {
-                painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-            }
-
-            if (item->shape == QTabBar::RoundedWest) {
-                painter->drawLine(rect.left(), rect.top() + tabBarHeight, rect.left(), rect.bottom());
-            } else {
-                painter->drawLine(rect.topLeft(), rect.bottomLeft());
-            }*/
-            /*rect.adjust(0, 0, -1 * getDPIScaling(), -1 * getDPIScaling());
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.topLeft(), rect.topRight());
-            painter->drawLine(rect.topRight(), rect.bottomRight());
-            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-            painter->drawLine(rect.topLeft(), rect.bottomLeft());*/
-
-            break;
-        }
-        /*case QStyle::PE_FrameTabWidget:
-        {
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawLine(rect.topLeft(), rect.bottomLeft());
-            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
-            painter->drawLine(rect.bottomRight(), rect.topRight());
-            break;
-        }*/
         case QStyle::PE_PanelLineEdit:
         {
             painter->setBrush(pal.brush(QPalette::Window));
@@ -1386,7 +1307,33 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             QRect iconRect, textRect = rect;
 
             textRect.setHeight(rect.height() - 2 * getDPIScaling());
-            if (!item->icon.isNull()) {
+            if (item->features & QStyleOptionViewItem::HasCheckIndicator && primitive == QStyle::PE_PanelItemViewItem) {
+                iconRect.setSize(QSize(16 * getDPIScaling(), 16 * getDPIScaling()));
+                iconRect.moveLeft(rect.left() + 2 * getDPIScaling());
+                iconRect.moveTop(rect.top() + 8 * getDPIScaling() - 8 * getDPIScaling());
+                textRect.setLeft(iconRect.right() + 6 * getDPIScaling());
+
+                //Draw checkbox
+                painter->setPen(pal.color(QPalette::WindowText));
+
+                painter->setBrush(QBrush(transparent));
+                painter->drawRect(iconRect);
+
+                if (item->checkState == Qt::Checked) {
+                    painter->setPen(transparent);
+                    painter->setBrush(pal.color(QPalette::WindowText));
+                    painter->drawRect(iconRect);
+                } else if (item->checkState == Qt::PartiallyChecked) {
+                    QPolygon triangle;
+                    triangle.append(iconRect.topLeft());
+                    triangle.append(iconRect.bottomLeft());
+                    triangle.append(iconRect.topRight());
+
+                    painter->setPen(transparent);
+                    painter->setBrush(pal.color(QPalette::WindowText));
+                    painter->drawPolygon(triangle);
+                }
+            } else if (!item->icon.isNull()) {
                 iconRect.setSize(((QAbstractItemView*) widget)->iconSize());
                 QIcon icon = item->icon;
                 QImage iconImage = icon.pixmap(iconRect.size()).toImage();
@@ -1397,7 +1344,6 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             } else {
                 textRect.setLeft(rect.left() + 6 * getDPIScaling());
             }
-
 
             painter->setPen(textPen);
             painter->drawText(rect, "");
@@ -1499,35 +1445,6 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             painter->drawRect(rect);
             break;
         }
-        /*case QStyle::PE_FrameButtonTool:
-        case QStyle::PE_PanelButtonTool:
-        {
-            const QStyleOptionToolBox* button = qstyleoption_cast<const QStyleOptionToolBox*>(option);
-            if (button == NULL) return;
-
-            QBrush brush = QBrush(pal.color(QPalette::Window));
-            QPen textPen;
-
-            if (button->state & QStyle::State_MouseOver) {
-                brush = QBrush(pal.color(QPalette::Window).lighter());
-            }
-
-            if (button->state & QStyle::State_Sunken) {
-                brush = QBrush(pal.color(QPalette::Window).darker(150));
-            }
-
-            if (button->state & QStyle::State_On) {
-                brush = QBrush(pal.color(QPalette::Highlight));
-            }
-
-            textPen = pal.color(QPalette::WindowText);
-
-            painter->setBrush(brush);
-            painter->drawRect(rect);
-
-            //painter->drawText(rect, Qt::AlignCenter, button->text);
-            break;
-        }*/
         case QStyle::PE_IndicatorToolBarHandle:
         {
             const QStyleOptionToolBar* bar = qstyleoption_cast<const QStyleOptionToolBar*>(option);
@@ -1556,11 +1473,50 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
 
             break;
         }
+        case QStyle::PE_IndicatorCheckBox:
+        {
+            const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
+            if (button == NULL) return;
+
+            painter->setPen(pal.color(QPalette::WindowText));
+
+            QBrush brush = QBrush(transparent);
+            if (button->state & QStyle::State_MouseOver) {
+                brush = QBrush(pal.color(QPalette::Window).lighter());
+            }
+
+            if (button->state & QStyle::State_Sunken) {
+                brush = QBrush(pal.color(QPalette::Window).darker(150));
+            }
+
+            painter->setBrush(brush);
+            painter->drawRect(rect);
+
+            if (button->state & QStyle::State_On) {
+                painter->setPen(transparent);
+                painter->setBrush(pal.color(QPalette::WindowText));
+                painter->drawRect(rect);
+
+                rect.adjust(3 * getDPIScaling(), 3 * getDPIScaling(), -1 * getDPIScaling(), -1 * getDPIScaling());
+            } else if (button->state & QStyle::State_NoChange) {
+                QPolygon triangle;
+                triangle.append(rect.topLeft());
+                triangle.append(rect.bottomLeft());
+                triangle.append(rect.topRight());
+
+                painter->setPen(transparent);
+                painter->setBrush(pal.color(QPalette::WindowText));
+                painter->drawPolygon(triangle);
+            }
+            break;
+        }
         case QStyle::PE_PanelButtonBevel:
         case QStyle::PE_PanelMenuBar:
         case QStyle::PE_FrameMenu:
         case PE_FrameFocusRect:
         case QStyle::PE_FrameStatusBar:
+        case QStyle::PE_FrameTabWidget:
+        case QStyle::PE_FrameTabBarBase:
         {
             //Don't do anything.
             break;
@@ -1610,7 +1566,9 @@ void Style::polish(QWidget *widget) {
             qobject_cast<QComboBox*>(widget) ||
             qobject_cast<QToolButton*>(widget) ||
             qobject_cast<QRadioButton*>(widget) ||
-            qobject_cast<QSlider*>(widget)) {
+            qobject_cast<QSlider*>(widget) ||
+            qobject_cast<QTabBar*>(widget) ||
+            qobject_cast<QScrollBar*>(widget)) {
         widget->setAttribute(Qt::WA_Hover);
     } else if (qobject_cast<QAbstractItemView*>(widget)) {
         qobject_cast<QAbstractItemView*>(widget)->viewport()->setAttribute(Qt::WA_Hover);
@@ -1644,9 +1602,9 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
         case CT_ScrollBar:
         {
             int width = 5;
-            if (opt->state & QStyle::State_MouseOver) {
+            /*if (opt->state & QStyle::State_MouseOver) {
                 width = 10;
-            }
+            }*/
 
             if (size.width() > size.height()) { //Horizontal
                 size.setHeight(width * getDPIScaling());
@@ -1728,28 +1686,30 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
 
 int Style::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w, QStyleHintReturn *shret) const {
     switch (sh) {
-    case QStyle::SH_Menu_MouseTracking:
-    case QStyle::SH_MenuBar_MouseTracking:
-    case QStyle::SH_Menu_SloppySubMenus:
-    case QStyle::SH_RubberBand_Mask:
-    case QStyle::SH_ComboBox_ListMouseTracking:
-    case QStyle::SH_Menu_SupportsSections:
-    case QStyle::SH_Slider_StopMouseOverSlider:
-    case QStyle::SH_Widget_Animate:
-    case QStyle::SH_Menu_KeyboardSearch:
-    case QStyle::SH_DialogButtonBox_ButtonsHaveIcons:
-    case QStyle::SH_ScrollBar_Transient:
-        return true;
-    case QStyle::SH_MessageBox_CenterButtons:
-    case QStyle::SH_Slider_SnapToValue:
-        return false;
-    case QStyle::SH_ItemView_ScrollMode:
-        return QAbstractItemView::ScrollPerPixel;
-    case QStyle::SH_LineEdit_PasswordMaskDelay:
-    case QStyle::SH_Menu_SubMenuPopupDelay:
-        return 0;
-    default:
-        return QCommonStyle::styleHint(sh, opt, w, shret);
+        case QStyle::SH_Menu_MouseTracking:
+        case QStyle::SH_MenuBar_MouseTracking:
+        case QStyle::SH_Menu_SloppySubMenus:
+        case QStyle::SH_RubberBand_Mask:
+        case QStyle::SH_ComboBox_ListMouseTracking:
+        case QStyle::SH_Menu_SupportsSections:
+        case QStyle::SH_Slider_StopMouseOverSlider:
+        case QStyle::SH_Widget_Animate:
+        case QStyle::SH_Menu_KeyboardSearch:
+        case QStyle::SH_DialogButtonBox_ButtonsHaveIcons:
+        case QStyle::SH_ScrollBar_Transient:
+            return true;
+        case QStyle::SH_MessageBox_CenterButtons:
+        case QStyle::SH_Slider_SnapToValue:
+            return false;
+        case QStyle::SH_ItemView_ScrollMode:
+            return QAbstractItemView::ScrollPerPixel;
+        case QStyle::SH_LineEdit_PasswordMaskDelay:
+        case QStyle::SH_Menu_SubMenuPopupDelay:
+            return 0;
+        case QStyle::SH_TabBar_Alignment:
+            return Qt::AlignLeft;
+        default:
+            return QCommonStyle::styleHint(sh, opt, w, shret);
     }
 }
 
@@ -1819,32 +1779,37 @@ QString Style::currentType(QString id) const {
 
 int Style::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *widget) const {
     switch (m) {
-    case PM_MessageBoxIconSize:
-        return 64 * getDPIScaling();
-    case PM_SubMenuOverlap:
-        return 0;
-    case PM_MenuPanelWidth:
-    case PM_MenuBarItemSpacing:
-    case PM_MenuBarPanelWidth:
+        case PM_MessageBoxIconSize:
+            return 64 * getDPIScaling();
+        case PM_SubMenuOverlap:
+            return 0;
+        case PM_MenuPanelWidth:
+        case PM_MenuBarItemSpacing:
+        case PM_MenuBarPanelWidth:
 
-    case PM_TabBarTabShiftHorizontal:
-    case PM_TabBarTabShiftVertical:
+        case PM_TabBarTabShiftHorizontal:
+        case PM_TabBarTabShiftVertical:
 
-    case PM_ToolBarItemMargin:
-        return 0;
-    case PM_MenuHMargin:
-    case PM_MenuVMargin:
-        return 1 * getDPIScaling();
-    case PM_CheckBoxLabelSpacing:
-    case PM_RadioButtonLabelSpacing:
-        return 4 * getDPIScaling();
-    case PM_ToolBarIconSize:
-    case PM_SliderControlThickness:
-        return 16 * getDPIScaling();
-    case PM_ScrollView_ScrollBarOverlap:
-        return 5 * getDPIScaling();
-    default:
-        return QCommonStyle::pixelMetric(m, opt, widget);
+        case PM_ToolBarItemMargin:
+            return 0;
+        case PM_MenuHMargin:
+        case PM_MenuVMargin:
+            return 1 * getDPIScaling();
+        case PM_CheckBoxLabelSpacing:
+        case PM_RadioButtonLabelSpacing:
+            return 4 * getDPIScaling();
+        case PM_ToolBarIconSize:
+        case PM_SliderControlThickness:
+            return 16 * getDPIScaling();
+        case PM_ScrollView_ScrollBarOverlap:
+            return 5 * getDPIScaling();
+        case PM_IndicatorWidth:
+        case PM_IndicatorHeight:
+        case PM_ExclusiveIndicatorHeight:
+        case PM_ExclusiveIndicatorWidth:
+            return 16 * getDPIScaling();
+        default:
+            return QCommonStyle::pixelMetric(m, opt, widget);
     }
 }
 
@@ -1869,4 +1834,16 @@ void Style::drawItemText(QPainter *painter, const QRect &rect, int alignment, co
 float Style::getDPIScaling() const {
     float currentDPI = QApplication::desktop()->logicalDpiX();
     return currentDPI / (float) 96;
+}
+
+QRect Style::subElementRect(SubElement r, const QStyleOption *opt, const QWidget *widget) const {
+    switch (r) {
+        case QStyle::SE_CheckBoxIndicator:
+        case QStyle::SE_CheckBoxContents: {
+            QRect r = opt->rect;
+            r.setSize(QSize(16, 16));
+            return r;
+        }
+    }
+    return QCommonStyle::subElementRect(r, opt, widget);
 }

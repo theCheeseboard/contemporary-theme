@@ -23,6 +23,8 @@
 #include <QSettings>
 #include <QCommandLinkButton>
 #include <QAbstractItemView>
+#include <QTabBar>
+#include <QScrollBar>
 
 class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle
 {
@@ -39,6 +41,7 @@ public:
     int pixelMetric(PixelMetric m, const QStyleOption *opt, const QWidget *widget) const override;
     QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *opt, const QWidget *widget) const override;
     void drawItemText(QPainter* painter, const QRect &rect, int alignment, const QPalette &palette, bool enabled, const QString &text, QPalette::ColorRole textRole) const override;
+    QRect subElementRect(SubElement r, const QStyleOption *opt, const QWidget *widget) const override;
 
     void polish(QWidget* widget) override;
 
