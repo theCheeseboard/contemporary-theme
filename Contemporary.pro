@@ -25,8 +25,9 @@ HEADERS +=\
     contemporary2/contemporary.h
 
 unix {
-    target.path = /usr/lib
-    INSTALLS += target
+    lib.files = libContemporary.so
+    lib.path = $$[QT_INSTALL_PLUGINS]/styles/
+    INSTALLS += lib
 }
 
 DISTFILES += \
