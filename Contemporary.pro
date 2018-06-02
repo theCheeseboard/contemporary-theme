@@ -12,13 +12,17 @@ TEMPLATE = lib
 
 DEFINES += CONTEMPORARY_LIBRARY
 
-SOURCES += contemporary.cpp \
+SOURCES += \
     plugin.cpp \
-    contemporarydefs.cpp
+    contemporarydefs.cpp \
+    contemporarylegacy.cpp \
+    contemporary2/contemporary.cpp
 
-HEADERS += contemporary.h\
+HEADERS +=\
         contemporary_global.h \
-    plugin.h
+    plugin.h \
+    contemporarylegacy.h \
+    contemporary2/contemporary.h
 
 unix {
     target.path = /usr/lib

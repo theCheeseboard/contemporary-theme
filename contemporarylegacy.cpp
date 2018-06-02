@@ -1,4 +1,4 @@
-#include "contemporary.h"
+#include "contemporarylegacy.h"
 
 Style::Style()
 {
@@ -37,12 +37,12 @@ Style::~Style() {
 }
 
 void Style::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
-    if (option == NULL) return;
-    if (painter == NULL) return;
+    if (option == nullptr) return;
+    if (painter == nullptr) return;
 
     QPalette pal = option->palette;
     QRect rect = option->rect;
-    if (widget != NULL) {
+    if (widget != nullptr) {
         painter->setFont(widget->font());
     }
     painter->setPen(transparent);
@@ -51,11 +51,11 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_PushButton:
     {
         const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
-        if (button == NULL) return;
+        if (button == nullptr) return;
         QBrush brush;
         QPen textPen;
 
-        if (widget == NULL) {
+        if (widget == nullptr) {
             //Sorry... :(
             goto drawNormalButton;
         }
@@ -100,7 +100,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
             textPen = col(255, 255, 255);
         } else {
             drawNormalButton:
-            if (button->features & QStyleOptionButton::Flat || (widget != NULL && widget->property("flatContemporary").toBool())) {
+            if (button->features & QStyleOptionButton::Flat || (widget != nullptr && widget->property("flatContemporary").toBool())) {
                 brush = QBrush(pal.color(QPalette::Window));
 
                 if (button->state & QStyle::State_MouseOver) {
@@ -173,7 +173,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_CheckBox:
     {
         const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
-        if (button == NULL) return;
+        if (button == nullptr) return;
         QRect checkArea(0, rect.height() / 2 - 6 * getDPIScaling(), 12 * getDPIScaling(), 12 * getDPIScaling());
 
         painter->setPen(pal.color(QPalette::WindowText));
@@ -222,7 +222,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     {
         const QStyleOptionHeader* header = qstyleoption_cast<const QStyleOptionHeader*>(option);
 
-        if (header == NULL) return;
+        if (header == nullptr) return;
         QString text = header->text;
         painter->setPen(pal.color(QPalette::WindowText));
         painter->drawText(rect, Qt::AlignCenter, text.remove("&"));
@@ -231,7 +231,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_RadioButton:
     {
         const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
-        if (button == NULL) return;
+        if (button == nullptr) return;
 
         QRect checkArea(0, rect.height() / 2 - 6 * getDPIScaling(), 12 * getDPIScaling(), 12 * getDPIScaling());
 
@@ -266,7 +266,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_ProgressBar:
     {
         const QStyleOptionProgressBar* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(option);
-        if (bar == NULL) return;
+        if (bar == nullptr) return;
 
         QRect barArea = rect;
         barArea.adjust(1 * getDPIScaling(), 1 * getDPIScaling(), -2 * getDPIScaling(), -1 * getDPIScaling());
@@ -332,7 +332,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_MenuBarItem:
     {
         const QStyleOptionMenuItem* item = qstyleoption_cast<const QStyleOptionMenuItem*>(option);
-        if (item == NULL) return;
+        if (item == nullptr) return;
 
         static int menuPaintOutHeight;
         static int menuPaintInHeight;
@@ -397,7 +397,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_MenuItem:
     {
         const QStyleOptionMenuItem* item = qstyleoption_cast<const QStyleOptionMenuItem*>(option);
-        if (item == NULL) return;
+        if (item == nullptr) return;
 
         QString text = item->text;
         text.remove("&");
@@ -606,7 +606,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_TabBarTabShape:
     {
         const QStyleOptionTab* item = qstyleoption_cast<const QStyleOptionTab*>(option);
-        if (item == NULL) return;
+        if (item == nullptr) return;
 
         QRect paintRect = rect;
         QBrush brush;
@@ -633,7 +633,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_TabBarTabLabel:
     {
         const QStyleOptionTab* item = qstyleoption_cast<const QStyleOptionTab*>(option);
-        if (item == NULL) return;
+        if (item == nullptr) return;
 
         //QRect paintRect = rect.adjusted(0, 0, 0, -2);
         QRect paintRect = rect;
@@ -659,7 +659,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_ShapedFrame:
     {
         const QStyleOptionFrame* item = qstyleoption_cast<const QStyleOptionFrame*>(option);
-        if (item == NULL) return;
+        if (item == nullptr) return;
 
         switch (item->frameShape) {
             case QFrame::StyledPanel:
@@ -706,7 +706,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_ItemViewItem:
     {
         const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
-        if (item == NULL) return;
+        if (item == nullptr) return;
 
         painter->setPen(transparent);
 
@@ -784,7 +784,7 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
     case QStyle::CE_DockWidgetTitle:
     {
         const QStyleOptionDockWidget* title = qstyleoption_cast<const QStyleOptionDockWidget*>(option);
-        if (title == NULL) return;
+        if (title == nullptr) return;
 
         QString text = title->title;
         text.remove("&");
@@ -808,12 +808,12 @@ void Style::drawControl(ControlElement element, const QStyleOption *option, QPai
 }
 
 void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget) const {
-    if (option == NULL) return;
-    if (painter == NULL) return;
+    if (option == nullptr) return;
+    if (painter == nullptr) return;
 
     QPalette pal = option->palette;
     QRect rect = option->rect;
-    if (widget != NULL) {
+    if (widget != nullptr) {
         painter->setFont(widget->font());
     }
     painter->setPen(transparent);
@@ -822,7 +822,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
     case QStyle::CC_ComboBox:
     {
         const QStyleOptionComboBox* item = qstyleoption_cast<const QStyleOptionComboBox*>(option);
-        if (item == NULL) return;
+        if (item == nullptr) return;
 
         painter->setPen(pal.color(QPalette::WindowText));
         QBrush brush;
@@ -881,7 +881,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
     case QStyle::CC_ToolButton:
     {
         const QStyleOptionToolButton* button = qstyleoption_cast<const QStyleOptionToolButton*>(option);
-        if (button == NULL) return;
+        if (button == nullptr) return;
 
         QBrush brush;
         QPen textPen;
@@ -1061,7 +1061,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
     case QStyle::CC_Slider:
     {
         const QStyleOptionSlider* slider = qstyleoption_cast<const QStyleOptionSlider*>(option);
-        if (slider == NULL) return;
+        if (slider == nullptr) return;
 
         //Adjust rectangle to be only 10px tall if it is larger.
         if (rect.height() > 16 * getDPIScaling()) {
@@ -1120,7 +1120,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
     QPalette pal = option->palette;
     QRect rect = option->rect;
 
-    if (widget != NULL) {
+    if (widget != nullptr) {
         painter->setFont(widget->font());
     }
     painter->setPen(transparent);
@@ -1138,16 +1138,18 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         }
         case QStyle::PE_PanelLineEdit:
         {
-            painter->setBrush(pal.brush(QPalette::Window));
-            painter->drawRect(rect);
-            if (option->state & QStyle::State_Enabled) {
-                painter->setPen(pal.color(QPalette::WindowText));
-            } else {
-                painter->setPen(pal.color(QPalette::Disabled, QPalette::WindowText));
-            }
+            if (((QLineEdit*) option->styleObject)->hasFrame()) {
+                painter->setBrush(pal.brush(QPalette::Window));
+                painter->drawRect(rect);
+                if (option->state & QStyle::State_Enabled) {
+                    painter->setPen(pal.color(QPalette::WindowText));
+                } else {
+                    painter->setPen(pal.color(QPalette::Disabled, QPalette::WindowText));
+                }
 
-            painter->drawLine(rect.topLeft(), rect.bottomLeft());
-            painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+                painter->drawLine(rect.topLeft(), rect.bottomLeft());
+                painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+            }
             break;
         }
         case QStyle::PE_PanelMenu:
@@ -1280,7 +1282,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
             //this->drawControl(CE_ItemViewItem, option, painter, widget);
 
             const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
-            if (item == NULL) return;
+            if (item == nullptr) return;
 
             painter->setPen(transparent);
             QPen textPen;
@@ -1380,11 +1382,11 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         case QStyle::PE_PanelButtonCommand:
         {
             const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
-            if (button == NULL) return;
+            if (button == nullptr) return;
             QBrush brush;
             QPen textPen;
 
-            if (widget == NULL) {
+            if (widget == nullptr) {
                 //Sorry... :(
                 goto drawNormalButton;
             }
@@ -1448,7 +1450,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         case QStyle::PE_IndicatorToolBarHandle:
         {
             const QStyleOptionToolBar* bar = qstyleoption_cast<const QStyleOptionToolBar*>(option);
-            if (bar == NULL) return;
+            if (bar == nullptr) return;
 
             painter->setPen(pal.color(QPalette::Foreground));
             if (bar->direction == Qt::LeftToRight) {
@@ -1476,7 +1478,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
         case QStyle::PE_IndicatorCheckBox:
         {
             const QStyleOptionButton* button = qstyleoption_cast<const QStyleOptionButton*>(option);
-            if (button == NULL) return;
+            if (button == nullptr) return;
 
             painter->setPen(pal.color(QPalette::WindowText));
 
@@ -1528,7 +1530,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption *option
 }
 
 QStyle::SubControl Style::hitTestComplexControl(ComplexControl cc, const QStyleOptionComplex *option, const QPoint &pt, const QWidget *w) const {
-    if (option == NULL) return QStyle::SC_None;
+    if (option == nullptr) return QStyle::SC_None;
 
     QRect rect = option->rect;
 
@@ -1536,7 +1538,7 @@ QStyle::SubControl Style::hitTestComplexControl(ComplexControl cc, const QStyleO
     case QStyle::CC_Slider:
     {
         const QStyleOptionSlider* slider = qstyleoption_cast<const QStyleOptionSlider*>(option);
-        if (slider == NULL) return QStyle::SC_None;
+        if (slider == nullptr) return QStyle::SC_None;
 
         QRect selection = rect;
         selection.adjust(1 * getDPIScaling(), 1 * getDPIScaling(), -2 * getDPIScaling(), -2 * getDPIScaling());
@@ -1557,7 +1559,7 @@ QStyle::SubControl Style::hitTestComplexControl(ComplexControl cc, const QStyleO
 }
 
 void Style::polish(QWidget *widget) {
-    if (widget == NULL) return;
+    if (widget == nullptr) return;
     if (qobject_cast<QCommandLinkButton*>(widget)) {
         widget->setAttribute(Qt::WA_Hover);
         widget->setAttribute(Qt::WA_StyledBackground);
@@ -1580,7 +1582,7 @@ QColor Style::col(int r, int g, int b) const {
 }
 
 QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &contentsSize, const QWidget *widget) const {
-    if (widget == NULL) return QSize();
+    if (widget == nullptr) return QSize();
     QSize size = contentsSize;
 
     switch (ct) {
@@ -1616,7 +1618,7 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
         case CT_ItemViewItem:
         {
             const QStyleOptionViewItem* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt);
-            if (item == NULL) return size;
+            if (item == nullptr) return size;
 
             QString text = item->text;
 
@@ -1664,7 +1666,7 @@ QSize Style::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QS
         case CT_MenuItem:
         {
             const QStyleOptionMenuItem* item = qstyleoption_cast<const QStyleOptionMenuItem*>(opt);
-            if (item == NULL) return size;
+            if (item == nullptr) return size;
 
             if (item->menuItemType == QStyleOptionMenuItem::Normal ||
                     (item->menuItemType == QStyleOptionMenuItem::Separator && item->text != "")) {

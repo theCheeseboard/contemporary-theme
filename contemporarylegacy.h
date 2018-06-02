@@ -1,5 +1,5 @@
-#ifndef CONTEMPORARY_H
-#define CONTEMPORARY_H
+#ifndef CONTEMPORARYLEGACY_H
+#define CONTEMPORARYLEGACY_H
 
 #include "contemporary_global.h"
 #include <QCommonStyle>
@@ -25,6 +25,7 @@
 #include <QAbstractItemView>
 #include <QTabBar>
 #include <QScrollBar>
+#include <QLineEdit>
 
 class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle
 {
@@ -55,7 +56,7 @@ private:
     void scheduleRepaint(const QWidget* widget, int after = 1000 / 60) const;
 
     uint indetermiateProgressSection = 0;
-    QTimer* indeterminateTimer = NULL; //Increments the indeterminateProgressSection at regular intervals
+    QTimer* indeterminateTimer = nullptr; //Increments the indeterminateProgressSection at regular intervals
 
     QVariant animation(QString id, QVariant retVal = "") const;
     void putAnimation(QString type, QString id, QVariant value) const;
@@ -72,6 +73,6 @@ private:
     //mutable QMap<QString, int> currentAnimations;
 };
 
-//const QWidget* Style::selectedMenu = NULL;
+//const QWidget* Style::selectedMenu = nullptr;
 
-#endif // CONTEMPORARY_H
+#endif // CONTEMPORARYLEGACY_H

@@ -1,5 +1,5 @@
 #include <QWidget>
-#include <contemporary.h>
+#include <contemporarylegacy.h>
 
 //Initialization of static variables go here.
-//const QWidget* Style::selectedMenu = NULL;
+//const QWidget* Style::selectedMenu = nullptr;
