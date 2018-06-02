@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += widgets thelib
-CONFIG   += c++11
+CONFIG   += c++14 plugin
 
 TARGET = Contemporary
 TEMPLATE = lib
@@ -25,9 +25,8 @@ HEADERS +=\
     contemporary2/contemporary.h
 
 unix {
-    lib.files = libContemporary.so
-    lib.path = $$[QT_INSTALL_PLUGINS]/styles/
-    INSTALLS += lib
+    target.path = $$[QT_INSTALL_PLUGINS]/styles/
+    INSTALLS += target
 }
 
 DISTFILES += \
