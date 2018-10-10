@@ -926,14 +926,15 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             textPen = col(255, 255, 255);
         } else {
             if (button->state & QStyle::State_Enabled) {
-                brush = QBrush(pal.color(QPalette::Window));
+                //brush = QBrush(pal.color(QPalette::Window));
+                brush = QBrush(Qt::transparent);
 
                 if (button->state & QStyle::State_MouseOver) {
-                    brush = QBrush(pal.color(QPalette::Window).lighter());
+                    brush = QBrush(QColor(255, 255, 255, 50));
                 }
 
                 if (button->state & QStyle::State_Sunken || button->state & QStyle::State_On) {
-                    brush = QBrush(pal.color(QPalette::Window).darker(150));
+                    brush = QBrush(QColor(0, 0, 0, 100));
                 }
             }
             textPen = pal.color(QPalette::WindowText);

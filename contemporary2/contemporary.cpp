@@ -2,6 +2,7 @@
 
 Contemporary::Contemporary() {
     oldStyle = new Style();
+    anim = new AnimationEngine;
 
     indeterminateTimer = new QTimer(this);
     if (theLibsGlobal::instance()->powerStretchEnabled()) {
@@ -31,6 +32,7 @@ Contemporary::Contemporary() {
 
 Contemporary::~Contemporary() {
     delete oldStyle;
+    delete anim;
     delete animations;
 }
 
@@ -80,6 +82,8 @@ void Contemporary::drawControl(ControlElement element, const QStyleOption* optio
         case CE_HeaderSection: drawControlHeaderSection(option, painter, widget); break;
         case CE_HeaderEmptyArea: drawControlHeaderEmptyArea(option, painter, widget); break;
         case CE_MenuBarEmptyArea: drawMenubarEmptyArea(option, painter, widget); break;
+        case CE_MenuItem: drawControlMenuItem(option, painter, widget); break;
+        case CE_CheckBoxLabel: drawControlCheckboxLabel(option, painter, widget); break;
         default: QCommonStyle::drawControl(element, option, painter, widget);
     }
 }
@@ -114,9 +118,10 @@ void Contemporary::drawPrimitive(PrimitiveElement primitive, const QStyleOption 
 
         case PE_IndicatorBranch: drawPrimitiveIndicatorBranch(option, painter, widget); break;
 
-        case PE_FrameFocusRect: drawPrimitiveFrameFocusRect(option, painter, widget);
+        case PE_FrameFocusRect: drawPrimitiveFrameFocusRect(option, painter, widget); break;
 
         case PE_FrameMenu:
+        case PE_PanelMenu:
         case PE_FrameGroupBox:
         case PE_Frame:
             drawPrimitiveFrame(option, painter, widget); break;
@@ -137,19 +142,58 @@ QIcon Contemporary::standardIcon(StandardPixmap standardIcon, const QStyleOption
 }
 
 void Contemporary::drawItemText(QPainter* painter, const QRect &rect, int alignment, const QPalette &palette, bool enabled, const QString &text, QPalette::ColorRole textRole) const {
-    oldStyle->drawItemText(painter, rect, alignment, palette, enabled, text, textRole);
+    QTextOption opt;
+    opt.setAlignment((Qt::Alignment) alignment);
+
+    QString t = text;
+    t.remove("&");
+    painter->setPen(palette.color(enabled ? QPalette::Normal : QPalette::Disabled, textRole));
+    painter->drawText(rect, t, opt);
 }
 
 QRect Contemporary::subElementRect(SubElement r, const QStyleOption *opt, const QWidget *widget) const {
-    return oldStyle->subElementRect(r, opt, widget);
+    switch (r) {
+        case SE_CheckBoxIndicator:
+        case SE_RadioButtonIndicator:
+            return subElementComboBoxIndicator(opt, widget);
+
+        case SE_CheckBoxContents:
+        case SE_RadioButtonContents:
+            return subElementComboBoxContents(opt, widget);
+
+        case SE_CheckBoxFocusRect:
+        case SE_RadioButtonFocusRect:
+            return subElementComboBoxFocusRect(opt, widget);
+
+        case SE_PushButtonFocusRect:
+            return subElementPushButtonFocusRect(opt, widget);
+
+        case SE_PushButtonContents:
+            return subElementPushButtonContents(opt, widget);
+
+        case SE_ItemViewItemFocusRect:
+            return QRect();
+
+        default: return oldStyle->subElementRect(r, opt, widget);
+    }
+
 }
 
 void Contemporary::polish(QWidget* widget) {
+    anim->registerWidget(widget);
+
     oldStyle->polish(widget);
+}
+
+void Contemporary::unpolish(QWidget *widget) {
+    anim->deregisterWidget(widget);
 }
 
 int Contemporary::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w, QStyleHintReturn *shret) const {
     switch (sh) {
+        case SH_Menu_FlashTriggeredItem:
+            return true;
+
         default: return oldStyle->styleHint(sh, opt, w, shret);
     }
 }
@@ -229,6 +273,9 @@ void Contemporary::drawPrimitivePanelButtonCommand(const QStyleOption *option, Q
     OPT_CAST(QStyleOptionButton)
     if (opt == nullptr) return;
 
+    //Get animation
+    PushButtonAnimation* anim = qobject_cast<PushButtonAnimation*>(this->anim->a(widget));
+
     QColor background;
     if (widget && widget->property("type") == "destructive") {
         if (opt->state & State_On || opt->state & State_Sunken) {
@@ -240,11 +287,11 @@ void Contemporary::drawPrimitivePanelButtonCommand(const QStyleOption *option, Q
         }
     } else if (opt->features & QStyleOptionButton::Flat) {
         if (opt->state & State_On || opt->state & State_Sunken) {
-            background = WINDOW_PRESS_COLOR;
+            background = QColor(0, 0, 0, 100);
         } else if (opt->state & State_MouseOver) {
-            background = WINDOW_HOVER_COLOR;
+            background = QColor(255, 255, 255, 100);
         } else {
-            background = WINDOW_COLOR;
+            background = QColor(255, 255, 255, 0);
         }
     } else {
         if (opt->state & State_On || opt->state & State_Sunken) {
@@ -255,8 +302,17 @@ void Contemporary::drawPrimitivePanelButtonCommand(const QStyleOption *option, Q
             background = BUTTON_COLOR;
         }
     }
+
+    QColor backgroundColor;
+    if (anim == nullptr) {
+        background = background;
+    } else {
+        anim->setTargetColor(background);
+        backgroundColor = anim->drawColor();
+    }
+
     painter->setPen(Qt::transparent);
-    painter->setBrush(background);
+    painter->setBrush(backgroundColor);
     painter->drawRect(opt->rect);
 
     if (widget && widget->property("type") == "positive") {
@@ -331,8 +387,6 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption *option, QPai
     if (opt == nullptr) return;
     OPT_VARS
 
-    animations->insert(widget->winId(), new tVariantAnimation());
-
     QRect rect = opt->rect;
     if (opt->state & QStyle::State_Item) {
         //Draw horizontal branch
@@ -380,11 +434,14 @@ void Contemporary::drawPrimitiveFrameFocusRect(const QStyleOption *option, QPain
     OPT_CAST(QStyleOptionFocusRect);
     if (opt == nullptr) return;
 
-    QRect r = option->rect;
-    r.setHeight(2);
-    r.moveBottom(0);
-    painter->setBrush(ACCENT_HOVER_COLOR);
-    painter->drawRect(r);
+    /*QRect r;
+    r.setLeft(0);
+    r.setBottom(opt->rect.bottom());
+    r.setWidth(opt->rect.width());
+    r.setTop(opt->rect.bottom() - 2);*/
+    painter->setBrush(QColor(255, 255, 255, 100));
+    painter->setPen(Qt::transparent);
+    painter->drawRect(opt->rect);
 }
 
 void Contemporary::drawControlProgressBarContents(const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
@@ -501,6 +558,61 @@ void Contemporary::drawMenubarEmptyArea(const QStyleOption *option, QPainter *pa
     painter->drawRect(opt->rect);
 }
 
+void Contemporary::drawControlMenuItem(const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
+    OPT_CAST(QStyleOptionMenuItem);
+    if (opt == nullptr) return;
+    OPT_VARS;
+
+    switch (opt->menuItemType) {
+        case QStyleOptionMenuItem::Normal:
+        case QStyleOptionMenuItem::SubMenu: {
+            QColor backgroundColor;
+            QPalette::ColorRole textColor;
+            if (opt->state & QStyle::State_Selected || opt->state & QStyle::State_Sunken) {
+                backgroundColor = opt->palette.color(QPalette::Highlight);
+                textColor = QPalette::HighlightedText;
+            } else {
+                backgroundColor = opt->palette.color(QPalette::Window);
+                textColor = QPalette::WindowText;
+            }
+
+            painter->setPen(Qt::transparent);
+            painter->setBrush(backgroundColor);
+            painter->drawRect(opt->rect);
+
+            if (!opt->icon.isNull()) {
+                QRect iconRect;
+                iconRect.setLeft(opt->rect.left() + 2 * getDPIScaling());
+                iconRect.setWidth(pixelMetric(PM_SmallIconSize, opt, widget));
+                iconRect.setHeight(pixelMetric(PM_SmallIconSize, opt, widget));
+                iconRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - pixelMetric(PM_SmallIconSize, opt, widget) / 2);
+
+                drawItemPixmap(painter, iconRect, Qt::AlignCenter, opt->icon.pixmap(pixelMetric(PM_SmallIconSize, opt, widget)));
+            }
+
+            QRect textRect;
+
+            textRect.setLeft(opt->rect.left() + 4 * getDPIScaling() + pixelMetric(PM_SmallIconSize, opt, widget));
+            textRect.setHeight(opt->fontMetrics.height());
+            textRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - opt->fontMetrics.height() / 2);
+            textRect.setRight(opt->rect.right());
+
+            drawItemText(painter, textRect, textHorizontalAlignment, opt->palette, opt->state & QStyle::State_Enabled, opt->text, textColor);
+            break;
+        }
+        case QStyleOptionMenuItem::Separator: {
+            if (opt->text == "") {
+                painter->setPen(opt->palette.color(QPalette::WindowText));
+                painter->drawLine(opt->rect.topLeft(), opt->rect.topRight());
+            } else {
+                painter->setBrush(opt->palette.color(QPalette::WindowText));
+                painter->drawRect(opt->rect);
+                drawItemText(painter, opt->rect, Qt::AlignCenter, opt->palette, opt->state & QStyle::State_Enabled, opt->text, QPalette::Window);
+            }
+        }
+    }
+}
+
 void Contemporary::drawComplexComboBox(const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget) const {
     OPT_CAST(QStyleOptionComboBox);
     if (opt == nullptr) return;
@@ -537,7 +649,7 @@ void Contemporary::drawComplexComboBox(const QStyleOptionComplex *option, QPaint
             textRect = opt->rect.adjusted(8 * getDPIScaling() + opt->iconSize.width(), 0, 0, 0);
         }
     }
-    drawItemText(painter, textRect, Qt::AlignLeft | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->currentText, QPalette::WindowText);
+    drawItemText(painter, textRect, textHorizontalAlignment | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->currentText, QPalette::WindowText);
 
     if (opt->subControls & SC_ComboBoxFrame) {
         if (opt->editable) {
@@ -567,3 +679,89 @@ void Contemporary::drawComplexComboBox(const QStyleOptionComplex *option, QPaint
         painter->drawPolygon(triangle);
     }
 }
+
+void Contemporary::drawControlCheckboxLabel(const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
+    OPT_CAST(QStyleOptionButton);
+    if (opt == nullptr) return;
+    OPT_VARS;
+
+    drawItemText(painter, opt->rect, textHorizontalAlignment | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->text, QPalette::WindowText);
+}
+
+QRect Contemporary::subElementComboBoxIndicator(const QStyleOption *option, const QWidget *widget) const {
+    OPT_CAST(QStyleOptionButton);
+    if (opt == nullptr) return QRect();
+    OPT_VARS;
+
+    QRect indicatorRect;
+    indicatorRect.setLeft(2 * getDPIScaling());
+    indicatorRect.setWidth(11 * getDPIScaling()); //11 to take the pen width into account
+    indicatorRect.setTop(opt->rect.height() / 2 - 12 * getDPIScaling() / 2);
+    indicatorRect.setHeight(11 * getDPIScaling());
+    return indicatorRect;
+}
+
+QRect Contemporary::subElementComboBoxContents(const QStyleOption *option, const QWidget *widget) const {
+    OPT_CAST(QStyleOptionButton);
+    if (opt == nullptr) return QRect();
+    OPT_VARS;
+
+    int center = opt->rect.height() / 2;
+
+    QRect textRect;
+    textRect.setLeft(18 * getDPIScaling());
+    textRect.setWidth(opt->fontMetrics.width(opt->text));
+    textRect.setTop(center - opt->fontMetrics.height() / 2);
+    textRect.setHeight(opt->fontMetrics.height());
+
+    return textRect;
+}
+
+QRect Contemporary::subElementPushButtonContents(const QStyleOption *option, const QWidget *widget) const {
+    OPT_CAST(QStyleOptionButton);
+    if (opt == nullptr) return QRect();
+    OPT_VARS;
+
+    return opt->rect;
+}
+
+QRect Contemporary::subElementPushButtonFocusRect(const QStyleOption *option, const QWidget *widget) const {
+    OPT_CAST(QStyleOptionButton);
+    if (opt == nullptr) return QRect();
+    OPT_VARS;
+
+    QRect rect = option->rect;
+    if (opt->features & QStyleOptionButton::CommandLinkButton) {
+        //Put focus indicator on the leading side
+        rect.setWidth(2 * getDPIScaling());
+        if (reverse) {
+            rect.moveRight(option->rect.width() - 1);
+        }
+    } else {
+        //Underline the button
+        rect.setHeight(2 * getDPIScaling());
+        rect.moveBottom(option->rect.height() - 1);
+    }
+
+    return rect;
+}
+
+QRect Contemporary::subElementComboBoxFocusRect(const QStyleOption *option, const QWidget *widget) const {
+    OPT_CAST(QStyleOptionButton);
+    if (opt == nullptr) return QRect();
+    OPT_VARS;
+
+    QRect indicatorRect;
+    indicatorRect.setLeft(2 * getDPIScaling());
+    indicatorRect.setWidth(12 * getDPIScaling());
+    indicatorRect.setTop(opt->rect.height() / 2 - 12 * getDPIScaling() / 2);
+    indicatorRect.setHeight(12 * getDPIScaling());
+
+    QRect rect;
+    rect.setLeft(0);
+    rect.setWidth(16 * getDPIScaling());
+    rect.setTop(opt->rect.height() / 2 - 16 * getDPIScaling() / 2);
+    rect.setHeight(16 * getDPIScaling());
+    return rect;
+}
+

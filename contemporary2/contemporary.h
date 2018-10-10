@@ -2,10 +2,11 @@
 #define CONTEMPORARY_H
 
 #include "contemporarylegacy.h"
+#include "animations/animationengine.h"
 #include <tvariantanimation.h>
 
 #define OPT_CAST(type) const type* opt = qstyleoption_cast<const type*>(option);
-#define OPT_VARS bool reverse = opt->direction == Qt::RightToLeft;
+#define OPT_VARS bool reverse = opt->direction == Qt::RightToLeft; Qt::AlignmentFlag textHorizontalAlignment = reverse ? Qt::AlignRight : Qt::AlignLeft;
 
 #define WINDOW_TEXT_COLOR opt->palette.color(QPalette::WindowText)
 #define WINDOW_COLOR opt->palette.color(QPalette::Window)
@@ -46,6 +47,7 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle
         QRect subElementRect(SubElement r, const QStyleOption *opt, const QWidget *widget) const override;
 
         void polish(QWidget* widget) override;
+        void unpolish(QWidget* widget) override;
 
         int styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w, QStyleHintReturn *shret) const override;
         int layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption *option, const QWidget *widget) const override;
@@ -80,11 +82,19 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle
         void drawControlProgressBar(const QStyleOption *option, QPainter *painter, const QWidget *widget) const;
         void drawControlHeaderSection(const QStyleOption *option, QPainter *painter, const QWidget *widget) const;
         void drawControlHeaderEmptyArea(const QStyleOption *option, QPainter *painter, const QWidget *widget) const;
+        void drawControlCheckboxLabel(const QStyleOption *option, QPainter *painter, const QWidget *widget) const;
+        void drawControlMenuItem(const QStyleOption *option, QPainter *painter, const QWidget *widget) const;
         void drawMenubarEmptyArea(const QStyleOption *option, QPainter *painter, const QWidget *widget) const;
 
         void drawComplexComboBox(const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget) const;
 
+        QRect subElementComboBoxIndicator(const QStyleOption* option, const QWidget* widget) const;
+        QRect subElementComboBoxContents(const QStyleOption *option, const QWidget *widget) const;
+        QRect subElementComboBoxFocusRect(const QStyleOption *option, const QWidget *widget) const;
+        QRect subElementPushButtonContents(const QStyleOption *option, const QWidget *widget) const;
+        QRect subElementPushButtonFocusRect(const QStyleOption *option, const QWidget *widget) const;
 
+        AnimationEngine* anim;
 };
 
 #endif // CONTEMPORARY_H
