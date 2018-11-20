@@ -30,10 +30,19 @@ HEADERS +=\
     contemporary2/animations/animation.h \
     contemporary2/animations/pushbuttonanimation.h
 
-unix {
-    target.path = $$[QT_INSTALL_PLUGINS]/styles/
-    INSTALLS += target
+win32 {
+    QT += thelib
+    INCLUDEPATH += "C:/Program Files/thelibs/include"
+    LIBS += -L"C:/Program Files/thelibs/lib" -lthe-libs
 }
+
+macx {
+    INCLUDEPATH += "/usr/local/include/the-libs"
+    LIBS += -L/usr/local/lib -lthe-libs
+}
+
+target.path = $$[QT_INSTALL_PLUGINS]/styles/
+INSTALLS += target
 
 DISTFILES += \
     plugin.json
