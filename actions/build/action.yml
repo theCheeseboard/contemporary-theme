@@ -1,0 +1,10 @@
+name: 'Install Contemporary'
+description: "Install Contemporary"
+inputs:
+  contemporary-branch:
+    description: 'Branch of Contemporary to install'
+    required: false
+    default: 'master'
+runs:
+  using: 'node12'
+  main: 'install.js'
