@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += widgets thelib
+QT       += widgets
 CONFIG   += c++14 plugin
 
 TARGET = Contemporary
@@ -31,7 +31,6 @@ HEADERS +=\
     contemporary2/animations/pushbuttonanimation.h
 
 win32 {
-    QT += thelib
     INCLUDEPATH += "C:/Program Files/thelibs/include"
     LIBS += -L"C:/Program Files/thelibs/lib" -lthe-libs
 }
@@ -39,6 +38,10 @@ win32 {
 macx {
     INCLUDEPATH += "/usr/local/include/the-libs"
     LIBS += -L/usr/local/lib -lthe-libs
+}
+
+unix:!macx {
+    QT += thelib
 }
 
 target.path = $$[QT_INSTALL_PLUGINS]/styles/
