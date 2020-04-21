@@ -13,6 +13,7 @@ TEMPLATE = lib
 DEFINES += CONTEMPORARY_LIBRARY
 
 SOURCES += \
+    focusDecorations/focusdecorationcontroller.cpp \
     plugin.cpp \
     contemporarydefs.cpp \
     contemporarylegacy.cpp \
@@ -23,12 +24,15 @@ SOURCES += \
 
 HEADERS +=\
         contemporary_global.h \
+    focusDecorations/focusdecorationcontroller.h \
     plugin.h \
     contemporarylegacy.h \
     contemporary2/contemporary.h \
     contemporary2/animations/animationengine.h \
     contemporary2/animations/animation.h \
     contemporary2/animations/pushbuttonanimation.h
+
+target.path = $$[QT_INSTALL_PLUGINS]/styles/
 
 win32 {
     INCLUDEPATH += "C:/Program Files/thelibs/include"
@@ -40,11 +44,17 @@ macx {
     LIBS += -L/usr/local/lib -lthe-libs
 }
 
-unix:!macx {
+unix:!macx:!android {
     QT += thelib
 }
 
-target.path = $$[QT_INSTALL_PLUGINS]/styles/
+android {
+    INCLUDEPATH += "/opt/thesuite-android/include/the-libs"
+    LIBS += -L/opt/thesuite-android/libs/armeabi-v7a -lthe-libs
+
+    target.path = /libs/armeabi-v7a/plugins/styles/
+}
+
 INSTALLS += target
 
 DISTFILES += \
