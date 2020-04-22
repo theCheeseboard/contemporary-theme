@@ -13,24 +13,14 @@ TEMPLATE = lib
 DEFINES += CONTEMPORARY_LIBRARY
 
 SOURCES += \
-    focusDecorations/focusdecorationcontroller.cpp \
     plugin.cpp \
     contemporarydefs.cpp \
-    contemporarylegacy.cpp \
-    contemporary2/contemporary.cpp \
-    contemporary2/animations/animationengine.cpp \
-    contemporary2/animations/animation.cpp \
-    contemporary2/animations/pushbuttonanimation.cpp
+    contemporarylegacy.cpp
 
 HEADERS +=\
         contemporary_global.h \
-    focusDecorations/focusdecorationcontroller.h \
     plugin.h \
-    contemporarylegacy.h \
-    contemporary2/contemporary.h \
-    contemporary2/animations/animationengine.h \
-    contemporary2/animations/animation.h \
-    contemporary2/animations/pushbuttonanimation.h
+    contemporarylegacy.h
 
 target.path = $$[QT_INSTALL_PLUGINS]/styles/
 
