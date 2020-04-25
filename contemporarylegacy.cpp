@@ -1,5 +1,33 @@
 #include "contemporarylegacy.h"
 
+#include <QPainter>
+#include <QStyleOption>
+#include <QDebug>
+#include <QTimer>
+#include <QGraphicsColorizeEffect>
+#include <QDesktopWidget>
+#include <QScroller>
+#include <tvariantanimation.h>
+
+#include "focusDecorations/focusdecorationcontroller.h"
+#include "widgetHandlers/abstractitemviewhandler.h"
+#include "widgetHandlers/abstractscrollareahandler.h"
+
+//Include controls
+#include <QPushButton>
+#include <QMainWindow>
+#include <QTextEdit>
+#include <QCheckBox>
+#include <QAbstractItemView>
+#include <QComboBox>
+#include <QToolButton>
+#include <QRadioButton>
+#include <QSettings>
+#include <QCommandLinkButton>
+#include <QTabBar>
+#include <QScrollBar>
+#include <QLineEdit>
+
 struct StylePrivate {
     mutable QVariantList animations;
     mutable QStringList animationTypes;
@@ -7,12 +35,16 @@ struct StylePrivate {
 
     QSettings* settings, *tsSettings;
     bool touchMode = false;
+
+    FocusDecorationController* focusController;
+    QList<AbstractWidgetHandler*> widgetHandlers;
 };
 
 Style::Style() {
     d = new StylePrivate();
     d->settings = new QSettings("theSuite", "contemporary_widget", this);
     d->tsSettings = new QSettings("theSuite", "theShell");
+    d->focusController = new FocusDecorationController();
 
     indeterminateTimer = new QTimer(this);
     if (theLibsGlobal::instance()->powerStretchEnabled()) {
@@ -37,11 +69,19 @@ Style::Style() {
         }
     });
     d->touchMode = d->tsSettings->value("input/touch", false).toBool();
+
+    d->widgetHandlers.append(new AbstractScrollAreaHandler());
+    d->widgetHandlers.append(new AbstractItemViewHandler());
 }
 
 Style::~Style() {
+    for (AbstractWidgetHandler* o : d->widgetHandlers) {
+        o->deleteLater();
+    }
+
     d->settings->deleteLater();
     d->tsSettings->deleteLater();
+    d->focusController->deleteLater();
     delete d;
 
     theLibsGlobal::instance()->disconnect();
@@ -170,7 +210,7 @@ drawNormalButton:
                 QIcon icon = button->icon;
                 QImage image = icon.pixmap(button->iconSize).toImage();
                 image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-                tintImage(image, textPen.color());
+                theLibsGlobal::tintImage(image, textPen.color());
 
                 painter->drawImage(iconRect, image);
             }
@@ -539,7 +579,7 @@ drawNormalButton:
                             QIcon icon = item->icon;
                             QImage image = icon.pixmap(SC_DPI(16), SC_DPI(16)).toImage();
                             image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-                            tintImage(image, textPen.color());
+                            theLibsGlobal::tintImage(image, textPen.color());
 
                             painter->drawImage(iconRect, image);
                         }
@@ -1037,7 +1077,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
                     colorizer.fillRect(image.rect(), textPen.brush());
                     colorizer.end();
                 }*/
-                tintImage(image, textPen.color());
+                theLibsGlobal::tintImage(image, textPen.color());
 
                 painter->drawImage(iconRect, image);
             }
@@ -1197,7 +1237,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption* option
             } else if (primitive == QStyle::PE_IndicatorArrowUp || primitive == QStyle::PE_IndicatorSpinUp) {
                 image = QIcon::fromTheme("go-up").pixmap(SC_DPI(16), SC_DPI(16)).toImage();
             }
-            tintImage(image, pal.color(QPalette::WindowText));
+            theLibsGlobal::tintImage(image, pal.color(QPalette::WindowText));
 
             QRect imageRect;
             imageRect.setTop(rect.top() + (rect.height() / 2) - SC_DPI(8));
@@ -1537,17 +1577,25 @@ void Style::polish(QWidget* widget) {
         qobject_cast<QTabBar*>(widget) ||
         qobject_cast<QScrollBar*>(widget)) {
         widget->setAttribute(Qt::WA_Hover);
-    } else if (qobject_cast<QAbstractItemView*>(widget)) {
-        qobject_cast<QAbstractItemView*>(widget)->viewport()->setAttribute(Qt::WA_Hover);
+    }
+
+    for (AbstractWidgetHandler* handler : d->widgetHandlers) {
+        handler->polish(widget);
     }
 }
 
 void Style::polish(QApplication* application) {
+    d->focusController->setApplication(application);
+}
 
+void Style::unpolish(QWidget* widget) {
+    for (AbstractWidgetHandler* handler : d->widgetHandlers) {
+        handler->unpolish(widget);
+    }
 }
 
 void Style::unpolish(QApplication* application) {
-
+    if (d->focusController->application() == application) d->focusController->clearApplication();
 }
 
 QColor Style::col(int r, int g, int b) const {
@@ -1696,27 +1744,6 @@ void Style::scheduleRepaint(const QWidget* widget, int after) const {
     updateTimer->start();
 }
 
-void Style::tintImage(QImage& image, QColor tint) const {
-    bool doPaint = true;
-    for (int y = 0; y < image.height(); y++) {
-        for (int x = 0; x < image.width(); x++) {
-            QColor pixelCol = image.pixelColor(x, y);
-            if ((pixelCol.blue() > pixelCol.green() - 10 && pixelCol.blue() < pixelCol.green() + 10) &&
-                (pixelCol.green() > pixelCol.red() - 10 && pixelCol.green() < pixelCol.red() + 10)) {
-            } else {
-                doPaint = false;
-            }
-        }
-    }
-
-    if (doPaint) {
-        QPainter painter(&image);
-        painter.setCompositionMode(QPainter::CompositionMode_SourceAtop);
-        painter.fillRect(0, 0, image.width(), image.height(), tint);
-        painter.end();
-    }
-}
-
 QVariant Style::animation(QString id, QVariant retVal) const {
     if (d->animationIds.contains(id)) {
         return d->animations.at(d->animationIds.indexOf(id));
@@ -1807,4 +1834,11 @@ QRect Style::subElementRect(SubElement r, const QStyleOption* opt, const QWidget
         }
     }
     return QCommonStyle::subElementRect(r, opt, widget);
+}
+
+
+QPixmap Style::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap& pixmap, const QStyleOption* opt) const {
+    QImage image = pixmap.toImage();
+    theLibsGlobal::tintImage(image, opt->palette.color(QPalette::WindowText));
+    return QPixmap::fromImage(image);
 }

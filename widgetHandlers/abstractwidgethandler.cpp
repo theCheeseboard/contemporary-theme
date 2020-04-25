@@ -19,7 +19,6 @@
  * *************************************/
 #include "abstractwidgethandler.h"
 
-AbstractWidgetHandler::AbstractWidgetHandler(QObject *parent) : QObject(parent)
-{
+AbstractWidgetHandler::AbstractWidgetHandler(QObject* parent) : QObject(parent) {
 
 }

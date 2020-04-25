@@ -17,23 +17,23 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * *************************************/
-#ifndef ABSTRACTWIDGETHANDLER_H
-#define ABSTRACTWIDGETHANDLER_H
+#ifndef ABSTRACTSCROLLAREAHANDLER_H
+#define ABSTRACTSCROLLAREAHANDLER_H
 
-#include <QObject>
+#include "abstractwidgethandler.h"
 
-class AbstractWidgetHandler : public QObject {
+class AbstractScrollAreaHandler : public AbstractWidgetHandler {
         Q_OBJECT
     public:
-        explicit AbstractWidgetHandler(QObject* parent = nullptr);
-
-        virtual void polish(QWidget* widget) = 0;
-        virtual void unpolish(QWidget* widget) = 0;
+        explicit AbstractScrollAreaHandler(QObject* parent = nullptr);
 
     signals:
 
-    private:
 
+        // AbstractWidgetHandler interface
+    public:
+        void polish(QWidget* widget);
+        void unpolish(QWidget* widget);
 };
 
-#endif // ABSTRACTWIDGETHANDLER_H
+#endif // ABSTRACTSCROLLAREAHANDLER_H

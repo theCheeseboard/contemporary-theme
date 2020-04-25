@@ -19,7 +19,39 @@
  * *************************************/
 #include "abstractitemviewhandler.h"
 
-AbstractItemViewHandler::AbstractItemViewHandler(QObject *parent) : QObject(parent)
-{
+#include <QAbstractItemView>
 
+struct AbstractItemViewHandlerPrivate {
+    QMap<QWidget*, QMetaObject::Connection> connections;
+};
+
+AbstractItemViewHandler::AbstractItemViewHandler(QObject* parent) : AbstractWidgetHandler(parent) {
+    d = new AbstractItemViewHandlerPrivate();
+}
+
+AbstractItemViewHandler::~AbstractItemViewHandler() {
+    delete d;
+}
+
+void AbstractItemViewHandler::polish(QWidget* widget) {
+    QAbstractItemView* view = qobject_cast<QAbstractItemView*>(widget);
+    if (view) {
+        view->viewport()->setAttribute(Qt::WA_Hover);
+
+        QMetaObject::Connection c = connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [ = ] {
+            QModelIndex index = view->currentIndex();
+            if (index.isValid()) {
+                view->setProperty("X-Contemporary-FocusDecorationGeometry", view->visualRect(index));
+            }
+        });
+        d->connections.insert(widget, c);
+    }
+}
+
+void AbstractItemViewHandler::unpolish(QWidget* widget) {
+    QAbstractItemView* view = qobject_cast<QAbstractItemView*>(widget);
+    if (view) {
+        disconnect(d->connections.value(widget));
+        d->connections.remove(widget);
+    }
 }

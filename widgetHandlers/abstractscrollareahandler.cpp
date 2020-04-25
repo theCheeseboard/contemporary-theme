@@ -17,23 +17,22 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * *************************************/
-#ifndef ABSTRACTWIDGETHANDLER_H
-#define ABSTRACTWIDGETHANDLER_H
+#include "abstractscrollareahandler.h"
 
-#include <QObject>
+#include <QAbstractScrollArea>
+#include <QScroller>
 
-class AbstractWidgetHandler : public QObject {
-        Q_OBJECT
-    public:
-        explicit AbstractWidgetHandler(QObject* parent = nullptr);
+AbstractScrollAreaHandler::AbstractScrollAreaHandler(QObject* parent) : AbstractWidgetHandler(parent) {
 
-        virtual void polish(QWidget* widget) = 0;
-        virtual void unpolish(QWidget* widget) = 0;
+}
 
-    signals:
 
-    private:
+void AbstractScrollAreaHandler::polish(QWidget* widget) {
+    QAbstractScrollArea* view = qobject_cast<QAbstractScrollArea*>(widget);
+    if (view) QScroller::grabGesture(view->viewport(), QScroller::LeftMouseButtonGesture);
+}
 
-};
-
-#endif // ABSTRACTWIDGETHANDLER_H
+void AbstractScrollAreaHandler::unpolish(QWidget* widget) {
+    QAbstractScrollArea* view = qobject_cast<QAbstractScrollArea*>(widget);
+    if (view) QScroller::ungrabGesture(view->viewport());
+}

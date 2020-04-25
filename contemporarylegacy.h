@@ -3,29 +3,7 @@
 
 #include "contemporary_global.h"
 #include <QCommonStyle>
-#include <QPainter>
-#include <QStyleOption>
-#include <QDebug>
-#include <QTimer>
-#include <QGraphicsColorizeEffect>
-#include <QDesktopWidget>
-#include <tvariantanimation.h>
-
-//Include controls
-#include <QPushButton>
-#include <QMainWindow>
-#include <QTextEdit>
-#include <QCheckBox>
-#include <QAbstractItemView>
-#include <QComboBox>
-#include <QToolButton>
-#include <QRadioButton>
-#include <QSettings>
-#include <QCommandLinkButton>
-#include <QAbstractItemView>
-#include <QTabBar>
-#include <QScrollBar>
-#include <QLineEdit>
+#include <QVariant>
 
 struct StylePrivate;
 class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle {
@@ -46,12 +24,14 @@ class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle {
 
         void polish(QWidget* widget) override;
         void polish(QApplication* application) override;
+        void unpolish(QWidget* widget) override;
         void unpolish(QApplication* application) override;
 
         int styleHint(StyleHint sh, const QStyleOption* opt, const QWidget* w, QStyleHintReturn* shret) const override;
         int layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption* option, const QWidget* widget) const override;
         SubControl hitTestComplexControl(ComplexControl cc, const QStyleOptionComplex* option, const QPoint& pt, const QWidget* w) const override;
-        void tintImage(QImage& image, QColor tint) const;
+
+        QPixmap generatedIconPixmap(QIcon::Mode iconMode, const QPixmap& pixmap, const QStyleOption* opt) const override;
     private:
         const QColor transparent = QColor::fromRgba64(0, 0, 0, 0);
         QColor col(int r, int g, int b) const;
@@ -65,6 +45,7 @@ class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle {
         QString currentType(QString id) const;
 
         StylePrivate* d;
+
 };
 
 //const QWidget* Style::selectedMenu = nullptr;

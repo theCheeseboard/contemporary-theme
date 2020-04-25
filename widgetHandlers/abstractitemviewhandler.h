@@ -20,16 +20,24 @@
 #ifndef ABSTRACTITEMVIEWHANDLER_H
 #define ABSTRACTITEMVIEWHANDLER_H
 
-#include <QObject>
+#include "abstractwidgethandler.h"
 
-class AbstractItemViewHandler : public QObject
-{
+struct AbstractItemViewHandlerPrivate;
+class AbstractItemViewHandler : public AbstractWidgetHandler {
         Q_OBJECT
     public:
-        explicit AbstractItemViewHandler(QObject *parent = nullptr);
+        explicit AbstractItemViewHandler(QObject* parent = nullptr);
+        ~AbstractItemViewHandler();
 
     signals:
 
+    private:
+        AbstractItemViewHandlerPrivate* d;
+
+        // AbstractWidgetHandler interface
+    public:
+        void polish(QWidget* widget);
+        void unpolish(QWidget* widget);
 };
 
 #endif // ABSTRACTITEMVIEWHANDLER_H

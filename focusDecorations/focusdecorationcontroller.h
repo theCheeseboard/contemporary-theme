@@ -17,23 +17,32 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * *************************************/
-#ifndef ABSTRACTWIDGETHANDLER_H
-#define ABSTRACTWIDGETHANDLER_H
+#ifndef FOCUSDECORATIONCONTROLLER_H
+#define FOCUSDECORATIONCONTROLLER_H
 
 #include <QObject>
 
-class AbstractWidgetHandler : public QObject {
+struct FocusDecorationControllerPrivate;
+class QApplication;
+class FocusDecorationController : public QObject {
         Q_OBJECT
     public:
-        explicit AbstractWidgetHandler(QObject* parent = nullptr);
+        explicit FocusDecorationController(QObject* parent = nullptr);
+        ~FocusDecorationController();
 
-        virtual void polish(QWidget* widget) = 0;
-        virtual void unpolish(QWidget* widget) = 0;
+        void setApplication(QApplication* application);
+        QApplication* application();
+        void clearApplication();
 
     signals:
 
     private:
+        FocusDecorationControllerPrivate* d;
 
+        void focusChanged(QWidget* oldWidget, QWidget* newWidget);
+        bool eventFilter(QObject* watched, QEvent* event);
+
+        void updateAllowVisible();
 };
 
-#endif // ABSTRACTWIDGETHANDLER_H
+#endif // FOCUSDECORATIONCONTROLLER_H

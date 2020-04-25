@@ -13,14 +13,24 @@ TEMPLATE = lib
 DEFINES += CONTEMPORARY_LIBRARY
 
 SOURCES += \
+    focusDecorations/focusdecoration.cpp \
+    focusDecorations/focusdecorationcontroller.cpp \
     plugin.cpp \
     contemporarydefs.cpp \
-    contemporarylegacy.cpp
+    contemporarylegacy.cpp \
+    widgetHandlers/abstractitemviewhandler.cpp \
+    widgetHandlers/abstractscrollareahandler.cpp \
+    widgetHandlers/abstractwidgethandler.cpp
 
 HEADERS +=\
         contemporary_global.h \
+    focusDecorations/focusdecoration.h \
+    focusDecorations/focusdecorationcontroller.h \
     plugin.h \
-    contemporarylegacy.h
+    contemporarylegacy.h \
+    widgetHandlers/abstractitemviewhandler.h \
+    widgetHandlers/abstractscrollareahandler.h \
+    widgetHandlers/abstractwidgethandler.h
 
 target.path = $$[QT_INSTALL_PLUGINS]/styles/
 

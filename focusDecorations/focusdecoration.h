@@ -22,14 +22,26 @@
 
 #include <QWidget>
 
-class FocusDecoration : public QWidget
-{
+struct FocusDecorationPrivate;
+class FocusDecoration : public QWidget {
         Q_OBJECT
     public:
-        explicit FocusDecoration(QWidget *parent = nullptr);
+        explicit FocusDecoration(QWidget* parent = nullptr);
+        ~FocusDecoration();
+
+        void setWidget(QWidget* widget);
+        void setAllowVisible(bool allowVisible);
 
     signals:
 
+    private:
+        FocusDecorationPrivate* d;
+
+        void updatePosition();
+        void updateParent();
+
+        bool eventFilter(QObject* watched, QEvent* event);
+        void paintEvent(QPaintEvent* event);
 };
 
 #endif // FOCUSDECORATION_H
