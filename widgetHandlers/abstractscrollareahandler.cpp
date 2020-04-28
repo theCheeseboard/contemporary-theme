@@ -29,7 +29,7 @@ AbstractScrollAreaHandler::AbstractScrollAreaHandler(QObject* parent) : Abstract
 
 void AbstractScrollAreaHandler::polish(QWidget* widget) {
     QAbstractScrollArea* view = qobject_cast<QAbstractScrollArea*>(widget);
-    if (view) QScroller::grabGesture(view->viewport(), QScroller::LeftMouseButtonGesture);
+    if (view && !view->property("X-Contemporary-NoInstallScroller").toBool()) QScroller::grabGesture(view->viewport(), QScroller::LeftMouseButtonGesture);
 }
 
 void AbstractScrollAreaHandler::unpolish(QWidget* widget) {
