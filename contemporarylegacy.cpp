@@ -823,7 +823,11 @@ drawNormalButton:
             QRect textRect = rect;
             textRect.adjust(SC_DPI(4), 0, 0, 0);
 
-            painter->setPen(pal.color(QPalette::WindowText));
+            painter->setPen(Qt::transparent);
+            painter->setBrush(pal.color(QPalette::WindowText));
+            painter->drawRect(rect);
+
+            painter->setPen(pal.color(QPalette::Window));
             painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, text);
             break;
         }
