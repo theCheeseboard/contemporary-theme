@@ -3,6 +3,7 @@
 
 #include <QStylePlugin>
 //#include "contemporary2/contemporary.h"
+#include "contemporarylegacy.h"
 
 class Plugin : public QStylePlugin
 {
