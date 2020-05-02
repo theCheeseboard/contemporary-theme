@@ -2,7 +2,7 @@
 #define PLUGIN_H
 
 #include <QStylePlugin>
-#include "contemporary2/contemporary.h"
+//#include "contemporary2/contemporary.h"
 
 class Plugin : public QStylePlugin
 {
