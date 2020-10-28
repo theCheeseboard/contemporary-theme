@@ -1,4 +1,4 @@
-Name:           contemporary-widgets
+Name:           contemporary-widgets-blueprint
 Version:        1.7
 Release:        1%{?dist}
 Summary:        Contemporary Widget Theme
