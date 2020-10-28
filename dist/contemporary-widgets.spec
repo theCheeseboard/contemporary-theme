@@ -24,7 +24,7 @@ Requires:       qt5-qtbase the-libs
 Contemporary Widget Theme
 
 %prep
-%setup -n contemporary-theme-%{version}
+%setup -n contemporary-widgets-%{version}
 
 %build
 qmake-qt5
