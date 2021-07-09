@@ -28,6 +28,8 @@
 #include <QScrollBar>
 #include <QLineEdit>
 
+#include <tpaintcalculator.h>
+
 struct StylePrivate {
     mutable QVariantList animations;
     mutable QStringList animationTypes;
@@ -88,6 +90,7 @@ Style::~Style() {
     indeterminateTimer->deleteLater();
 }
 
+#include <tnotification.h>
 void Style::drawControl(ControlElement element, const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
     if (option == nullptr) return;
     if (painter == nullptr) return;
@@ -98,6 +101,11 @@ void Style::drawControl(ControlElement element, const QStyleOption* option, QPai
         painter->setFont(widget->font());
     }
     painter->setPen(transparent);
+
+    tPaintCalculator* paintCalculator = new tPaintCalculator();
+    paintCalculator->setPainter(painter);
+    paintCalculator->setDrawBounds(rect);
+    tPaintCalculatorScoper paintCalculatorScoper(paintCalculator);
 
     switch (element) {
         case QStyle::CE_PushButton: {
@@ -185,8 +193,10 @@ drawNormalButton:
 
             }
 
-            painter->setBrush(brush);
-            painter->drawRect(rect);
+            paintCalculator->addRect(rect, [ = ](QRectF paintBounds) {
+                painter->setBrush(brush);
+                painter->drawRect(paintBounds);
+            });
 
             QString text = button->text;
 
@@ -212,12 +222,16 @@ drawNormalButton:
                 image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
                 theLibsGlobal::tintImage(image, textPen.color());
 
-                painter->drawImage(iconRect, image);
+                paintCalculator->addRect(iconRect, [ = ](QRectF paintBounds) {
+                    painter->drawImage(paintBounds, image);
+                });
             }
 
             //Draw text
-            painter->setPen(textPen);
-            painter->drawText(textRect, Qt::AlignCenter, text.remove("&"));
+            paintCalculator->addRect(textRect, [ = ](QRectF paintBounds) {
+                painter->setPen(textPen);
+                painter->drawText(paintBounds, Qt::AlignCenter, QString(text).remove("&"));
+            });
 
             break;
         }
@@ -383,7 +397,6 @@ drawNormalButton:
             static QString selectedOutMenu = "";
 
             if (item->state & QStyle::State_Selected || item->state & QStyle::State_Sunken) {
-                painter->setPen(transparent);
                 if (selectedInMenu == "") {
                     selectedInMenu = item->text;
 
@@ -398,12 +411,16 @@ drawNormalButton:
                     connect(anim, SIGNAL(valueChanged(QVariant)), widget, SLOT(repaint()));
                     connect(anim, SIGNAL(finished()), anim, SLOT(deleteLater()));
                     anim->start();
-                } else if (selectedInMenu == item->text) {
-                    painter->setBrush(pal.brush(QPalette::Highlight));
-                    painter->drawRect(rect.left(), rect.top(), rect.width(), menuPaintInHeight);
                 }
 
-                painter->setPen(pal.color(QPalette::HighlightedText));
+                paintCalculator->addRect(QRect(rect.left(), rect.top(), rect.width(), menuPaintInHeight), [ = ](QRectF paintBounds) {
+                    painter->setPen(transparent);
+                    if (selectedInMenu == item->text) {
+                        painter->setBrush(pal.brush(QPalette::Highlight));
+                        painter->drawRect(paintBounds);
+                    }
+                    painter->setPen(pal.color(QPalette::HighlightedText));
+                });
             } else {
                 if (selectedOutMenu != item->text) {
                     if (selectedInMenu == item->text) {
@@ -426,15 +443,24 @@ drawNormalButton:
                         anim->start();
                     }
                 } else {
-                    painter->setBrush(pal.brush(QPalette::Highlight));
-                    painter->drawRect(rect.left(), rect.top(), rect.width(), menuPaintOutHeight);
+                    paintCalculator->addRect(QRectF(rect.left(), rect.top(), rect.width(), menuPaintOutHeight), [ = ](QRectF paintBounds) {
+                        painter->setBrush(pal.brush(QPalette::Highlight));
+                        painter->drawRect(paintBounds);
+                    });
                 }
-                painter->setPen(pal.color(QPalette::WindowText));
+
+                paintCalculator->addRect(QRectF(), [ = ](QRectF paintBounds) {
+                    Q_UNUSED(paintBounds);
+                    painter->setPen(pal.color(QPalette::WindowText));
+                });
             }
 
             QString text = item->text;
             text.remove("&");
-            painter->drawText(item->rect, Qt::AlignCenter, text);
+
+            paintCalculator->addRect(item->rect, [ = ](QRectF paintBounds) {
+                painter->drawText(paintBounds, Qt::AlignCenter, text);
+            });
             break;
         }
         case QStyle::CE_MenuItem: {
@@ -457,15 +483,18 @@ drawNormalButton:
                     int halfHeight = rect.height() / 2;
 
                     if (item->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                        painter->setPen(transparent);
-                        QLinearGradient gradient;
-                        gradient.setStart(rect.right(), 0);
-                        gradient.setFinalStop(rect.right() - halfHeight, 0);
-                        gradient.setColorAt(0, pal.color(QPalette::WindowText));
-                        gradient.setColorAt(1, transparent);
-                        painter->setBrush(QBrush(gradient));
+                        paintCalculator->addRect(QRectF(rect.right() - halfHeight, rect.top(), halfHeight, item->rect.height()), [ = ](QRectF paintBounds) {
+                            painter->setPen(transparent);
 
-                        painter->drawRect(item->rect.right() - halfHeight, item->rect.top(), halfHeight, item->rect.height());
+                            QLinearGradient gradient;
+                            gradient.setStart(paintBounds.right(), 0);
+                            gradient.setFinalStop(paintBounds.right() - halfHeight, 0);
+                            gradient.setColorAt(paintCalculator->layoutDirection() == Qt::LeftToRight ? 0 : 1, pal.color(QPalette::WindowText));
+                            gradient.setColorAt(paintCalculator->layoutDirection() == Qt::LeftToRight ? 1 : 0, transparent);
+                            painter->setBrush(QBrush(gradient));
+
+                            painter->drawRect(paintBounds);
+                        });
                     }
 
                     QPen textPen;
@@ -517,12 +546,15 @@ drawNormalButton:
                         textPen = pal.color(QPalette::WindowText);
                     }
 
-                    painter->setPen(transparent);
-                    painter->setBrush(pal.brush(QPalette::Highlight));
                     int selectionWidth = animation(text, 0).toInt();
-                    painter->drawRect(rect.left(), rect.top(), selectionWidth, rect.height());
+                    paintCalculator->addRect(QRectF(rect.left(), rect.top(), selectionWidth, rect.height()), [ = ](QRectF paintBounds) {
+                        painter->setPen(transparent);
+                        painter->setBrush(pal.brush(QPalette::Highlight));
+                        painter->drawRect(paintBounds);
 
-                    painter->setPen(textPen);
+                        painter->setPen(textPen);
+                    });
+
 
                     QRect textRect = rect;
                     //if (item->menuHasCheckableItems) {
@@ -532,41 +564,62 @@ drawNormalButton:
                     textRect.setLeft(rect.left() + SC_DPI(24));
                     textRect.setRight(rect.right() - SC_DPI(4));
 
-                    if (text.contains("\t")) {
-                        QString keyText = text.mid(text.indexOf("\t"));
-                        if (d->settings->value("keyboard/isApple", false).toBool()) {
-                            keyText.replace("Ctrl+", "^");
-                            keyText.replace("Alt+", "⌥");
-                            keyText.replace("Meta+", "⌘");
+                    paintCalculator->addRect(textRect, [ = ](QRectF paintBounds) {
+                        if (text.contains("\t")) {
+                            QString keyText = text.mid(text.indexOf("\t"));
+                            if (d->settings->value("keyboard/isApple", false).toBool()) {
+                                keyText.replace("Ctrl+", "^");
+                                keyText.replace("Alt+", "⌥");
+                                keyText.replace("Meta+", "⌘");
+                            } else {
+                                keyText.replace("Ctrl+", "⎈");
+                                keyText.replace("Alt+", "⎇");
+                                keyText.replace("Meta+", "❖");
+                            }
+                            keyText.replace("Shift+", "⇧");
+                            keyText.replace("Esc", "⎋");
+                            keyText.replace("Tab", "⇄");
+                            painter->drawText(paintBounds, Qt::AlignVCenter | Qt::AlignLeft, text.left(text.indexOf("\t")));
+                            painter->drawText(paintBounds, Qt::AlignVCenter | Qt::AlignRight, keyText);
                         } else {
-                            keyText.replace("Ctrl+", "⎈");
-                            keyText.replace("Alt+", "⎇");
-                            keyText.replace("Meta+", "❖");
+                            painter->drawText(paintBounds, Qt::AlignVCenter | Qt::AlignLeft, text);
                         }
-                        keyText.replace("Shift+", "⇧");
-                        keyText.replace("Esc", "⎋");
-                        keyText.replace("Tab", "⇄");
-                        painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, text.left(text.indexOf("\t")));
-                        painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignRight, keyText);
-                    } else {
-                        painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, text);
-                    }
+                    });
+
 
                     if (item->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                        painter->setPen(transparent);
-                        painter->setBrush(pal.brush(QPalette::Window));
+                        paintCalculator->addRect(QRectF(rect.right() - halfHeight, rect.top(), halfHeight, rect.height()), [ = ](QRectF paintBounds) {
+                            painter->setPen(transparent);
+                            painter->setBrush(pal.brush(QPalette::Window));
 
-                        QPolygon triangle1;
-                        triangle1.append(QPoint(rect.right(), rect.top()));
-                        triangle1.append(QPoint(rect.right(), rect.top() + halfHeight));
-                        triangle1.append(QPoint(rect.right() - halfHeight, rect.top()));
-                        painter->drawPolygon(triangle1);
+//                            QPolygon triangle1;
+//                            triangle1.append(QPoint(rect.right(), rect.top()));
+//                            triangle1.append(QPoint(rect.right(), rect.top() + halfHeight));
+//                            triangle1.append(QPoint(rect.right() - halfHeight, rect.top()));
+//                            painter->drawPolygon(triangle1);
 
-                        QPolygon triangle2;
-                        triangle2.append(QPoint(rect.right(), rect.bottom() + SC_DPI(1)));
-                        triangle2.append(QPoint(rect.right(), rect.bottom() + SC_DPI(1) - halfHeight));
-                        triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom() + SC_DPI(1)));
-                        painter->drawPolygon(triangle2);
+//                            QPolygon triangle2;
+//                            triangle2.append(QPoint(rect.right(), rect.bottom() + SC_DPI(1)));
+//                            triangle2.append(QPoint(rect.right(), rect.bottom() + SC_DPI(1) - halfHeight));
+//                            triangle2.append(QPoint(rect.right() - halfHeight, rect.bottom() + SC_DPI(1)));
+//                            painter->drawPolygon(triangle2);
+
+                            QPolygonF triangle;
+                            if (paintCalculator->layoutDirection() == Qt::LeftToRight) {
+                                triangle.append(QPointF(paintBounds.topRight()));
+                                triangle.append(QPointF(paintBounds.bottomRight()));
+                                triangle.append(QPointF(paintBounds.right() - halfHeight, paintBounds.bottom()));
+                                triangle.append(QPointF(paintBounds.right(), paintBounds.top() + halfHeight));
+                                triangle.append(QPointF(paintBounds.right() - halfHeight, paintBounds.top()));
+                            } else {
+                                triangle.append(QPointF(paintBounds.topLeft()));
+                                triangle.append(QPointF(paintBounds.bottomLeft()));
+                                triangle.append(QPointF(paintBounds.left() + halfHeight, paintBounds.bottom()));
+                                triangle.append(QPointF(paintBounds.left(), paintBounds.top() + halfHeight));
+                                triangle.append(QPointF(paintBounds.left() + halfHeight, paintBounds.top()));
+                            }
+                            painter->drawPolygon(triangle);
+                        });
                     }
 
                     if (item->checkType == QStyleOptionMenuItem::NotCheckable) {
@@ -581,28 +634,46 @@ drawNormalButton:
                             image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
                             theLibsGlobal::tintImage(image, textPen.color());
 
-                            painter->drawImage(iconRect, image);
+                            paintCalculator->addRect(iconRect, [ = ](QRectF paintBounds) {
+                                painter->drawImage(paintBounds, image);
+                            });
                         }
                     } else {
-                        painter->setPen(pal.color(QPalette::WindowText));
-                        painter->setBrush(pal.brush(QPalette::Window));
+                        paintCalculator->addRect(QRectF(rect.left(), rect.top(), halfHeight, rect.height()), [ = ](QRectF paintBounds) {
+                            QPolygonF triangle;
+                            if (paintCalculator->layoutDirection() == Qt::LeftToRight) {
+                                triangle.append(paintBounds.topLeft());
+                                triangle.append(paintBounds.bottomLeft());
+                                triangle.append(QPoint(paintBounds.left() + halfHeight, paintBounds.top() + halfHeight));
+                            } else {
+                                triangle.append(paintBounds.topRight());
+                                triangle.append(paintBounds.bottomRight());
+                                triangle.append(QPoint(paintBounds.right() - halfHeight, paintBounds.top() + halfHeight));
+                            }
 
-                        QPolygon triangle;
-                        triangle.append(rect.topLeft());
-                        triangle.append(rect.bottomLeft());
-                        triangle.append(QPoint(rect.left() + halfHeight, rect.top() + halfHeight));
-                        painter->drawPolygon(triangle);
+                            painter->setPen(pal.color(QPalette::WindowText));
+                            painter->setBrush(pal.brush(QPalette::Window));
+                            painter->drawPolygon(triangle);
+                        });
                     }
 
                     if (item->checked) {
-                        painter->setPen(transparent);
-                        painter->setBrush(pal.brush(QPalette::WindowText));
+                        paintCalculator->addRect(QRectF(rect.left(), rect.top(), halfHeight, rect.height()), [ = ](QRectF paintBounds) {
+                            QPolygonF triangle;
+                            if (paintCalculator->layoutDirection() == Qt::LeftToRight) {
+                                triangle.append(paintBounds.topLeft());
+                                triangle.append(paintBounds.bottomLeft());
+                                triangle.append(QPoint(paintBounds.left() + halfHeight, paintBounds.top() + halfHeight));
+                            } else {
+                                triangle.append(paintBounds.topRight());
+                                triangle.append(paintBounds.bottomRight());
+                                triangle.append(QPoint(paintBounds.right() - halfHeight, paintBounds.top() + halfHeight));
+                            }
 
-                        QPolygon triangle;
-                        triangle.append(rect.topLeft());
-                        triangle.append(rect.bottomLeft());
-                        triangle.append(QPoint(rect.left() + halfHeight, rect.top() + halfHeight));
-                        painter->drawPolygon(triangle);
+                            painter->setPen(transparent);
+                            painter->setBrush(pal.brush(QPalette::WindowText));
+                            painter->drawPolygon(triangle);
+                        });
                     }
 
                     break;
@@ -620,8 +691,10 @@ drawNormalButton:
                     break;
                 }
                 case QStyleOptionMenuItem::Margin: {
-                    painter->setBrush(pal.brush(QPalette::Window));
-                    painter->drawRect(rect);
+                    paintCalculator->addRect(rect, [ = ](QRectF paintBounds) {
+                        painter->setBrush(pal.brush(QPalette::Window));
+                        painter->drawRect(paintBounds);
+                    });
                 }
             }
             break;
