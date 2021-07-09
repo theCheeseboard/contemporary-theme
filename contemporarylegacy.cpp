@@ -240,8 +240,6 @@ drawNormalButton:
             if (button == nullptr) return;
             QRect checkArea(rect.left(), rect.top() + rect.height() / 2 - SC_DPI(6), SC_DPI(12), SC_DPI(12));
 
-            painter->setPen(pal.color(QPalette::WindowText));
-
             QBrush brush = QBrush(transparent);
             if (button->state & QStyle::State_MouseOver) {
                 brush = QBrush(pal.color(QPalette::Window).lighter());
@@ -251,36 +249,41 @@ drawNormalButton:
                 brush = QBrush(pal.color(QPalette::Window).darker(150));
             }
 
-            painter->setBrush(brush);
-            painter->drawRect(checkArea);
+            paintCalculator->addRect(checkArea, [ = ](QRectF paintBounds) {
+                painter->setBrush(brush);
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawRect(paintBounds);
+            });
 
             if (button->state & QStyle::State_On) {
-                painter->setPen(transparent);
-                painter->setBrush(pal.color(QPalette::WindowText));
-                painter->drawRect(checkArea);
-
-                QRect tickArea = checkArea;
-                tickArea.adjust(SC_DPI(3), SC_DPI(3), SC_DPI(-1), SC_DPI(-1));
+                paintCalculator->addRect(checkArea, [ = ](QRectF paintBounds) {
+                    painter->setPen(transparent);
+                    painter->setBrush(pal.color(QPalette::WindowText));
+                    painter->drawRect(paintBounds);
+                });
             } else if (button->state & QStyle::State_NoChange) {
-                QPolygon triangle;
-                triangle.append(checkArea.topLeft());
-                triangle.append(checkArea.bottomLeft());
-                triangle.append(checkArea.topRight());
+                paintCalculator->addRect(checkArea, [ = ](QRectF paintBounds) {
+                    QPolygonF triangle;
+                    triangle.append(paintBounds.topLeft());
+                    triangle.append(paintBounds.bottomLeft());
+                    triangle.append(paintBounds.topRight());
 
-                painter->setPen(transparent);
-                painter->setBrush(pal.color(QPalette::WindowText));
-                painter->drawPolygon(triangle);
+                    painter->setPen(transparent);
+                    painter->setBrush(pal.color(QPalette::WindowText));
+                    painter->drawPolygon(triangle);
+                });
             }
 
 
             //Draw text
-            QString text = button->text;
             QRect textArea = rect;
 
             //Draw to the right of the checkbox
             textArea.setLeft(checkArea.right() + SC_DPI(4));
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawText(textArea, Qt::AlignVCenter | Qt::AlignLeft, text.remove("&"));
+            paintCalculator->addRect(textArea, [ = ](QRectF paintBounds) {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawText(paintBounds, Qt::AlignVCenter | Qt::AlignLeft, QString(button->text).remove("&"));
+            });
             break;
         }
         case QStyle::CE_Header: {
@@ -298,7 +301,6 @@ drawNormalButton:
 
             QRect checkArea(0, rect.height() / 2 - SC_DPI(6), SC_DPI(12), SC_DPI(12));
 
-            painter->setPen(pal.color(QPalette::WindowText));
             QBrush brush = QBrush(transparent);
             if (button->state & QStyle::State_MouseOver) {
                 brush = QBrush(pal.color(QPalette::Window).lighter());
@@ -307,23 +309,31 @@ drawNormalButton:
             if (button->state & QStyle::State_Sunken) {
                 brush = QBrush(pal.color(QPalette::Window).darker(150));
             }
-            painter->setBrush(brush);
-            painter->drawEllipse(checkArea);
+
+            paintCalculator->addRect(checkArea, [ = ](QRectF paintBounds) {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->setBrush(brush);
+                painter->drawEllipse(paintBounds);
+            });
 
             if (button->state & QStyle::State_On) {
-                painter->setPen(transparent);
-                painter->setBrush(pal.color(QPalette::WindowText));
-                painter->drawEllipse(checkArea.adjusted(SC_DPI(2), SC_DPI(2), -SC_DPI(1), -SC_DPI(1)));
+                paintCalculator->addRect(checkArea.adjusted(SC_DPI(2), SC_DPI(2), -SC_DPI(1), -SC_DPI(1)), [ = ](QRectF paintBounds) {
+                    painter->setPen(transparent);
+                    painter->setBrush(pal.color(QPalette::WindowText));
+                    painter->drawEllipse(paintBounds);
+                });
             }
 
             //Draw text
-            QString text = button->text;
             QRect textArea = rect;
 
             //Draw to the right of the checkbox
             textArea.setLeft(checkArea.right() + 4);
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->drawText(textArea, Qt::AlignVCenter | Qt::AlignLeft, text.remove("&"));
+
+            paintCalculator->addRect(textArea, [ = ](QRectF paintBounds) {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->drawText(paintBounds, Qt::AlignVCenter | Qt::AlignLeft, QString(button->text).remove("&"));
+            });
             break;
         }
         case QStyle::CE_ProgressBar: {
