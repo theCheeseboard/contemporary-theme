@@ -90,7 +90,6 @@ Style::~Style() {
     indeterminateTimer->deleteLater();
 }
 
-#include <tnotification.h>
 void Style::drawControl(ControlElement element, const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
     if (option == nullptr) return;
     if (painter == nullptr) return;
@@ -1172,45 +1171,8 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             break;
         }
         case QStyle::CC_Slider: {
-            const QStyleOptionSlider* slider = qstyleoption_cast<const QStyleOptionSlider*>(option);
-            if (slider == nullptr) return;
-
-            //Adjust rectangle to be only 10px tall if it is larger.
-            if (rect.height() > SC_DPI(16)) {
-                int reduction = (rect.height() - SC_DPI(16)) / 2;
-                rect.adjust(0, reduction, 0, -reduction);
-            }
-
-            //Draw border
-            painter->setPen(pal.color(QPalette::WindowText));
-            painter->setBrush(pal.color(QPalette::Window));
-            painter->drawRect(rect.adjusted(0, 0, -1, -1));
-
-            //Draw selected portion
-            QRect selection = rect;
-            selection.adjust(1, 1, -SC_DPI(2), -SC_DPI(2));
-            selection.setWidth((((float) slider->sliderPosition - (float) slider->minimum) / ((float) slider->maximum - (float) slider->minimum)) * (float) selection.width());
-            painter->setPen(transparent);
-            painter->setBrush(pal.brush(QPalette::Highlight));
-            painter->drawRect(selection);
-
-            //Draw Thumb
-            QRect thumb = rect;
-            thumb.setSize(QSize(rect.height() - SC_DPI(1), rect.height() - SC_DPI(1)));
-            thumb.moveLeft(selection.right() - (thumb.width() / 2));
-
-            if (slider->state & State_On || slider->state & State_Sunken) {
-                QColor highlightColor = pal.color(QPalette::Highlight).darker(150);
-                painter->setPen(pal.color(QPalette::HighlightedText));
-                painter->setBrush(highlightColor);
-            } else if (slider->activeSubControls & QStyle::SC_SliderHandle) {
-                painter->setPen(pal.color(QPalette::HighlightedText));
-                painter->setBrush(pal.brush(QPalette::Highlight));
-            } else {
-                painter->setPen(pal.color(QPalette::WindowText));
-                painter->setBrush(pal.brush(QPalette::Window));
-            }
-            painter->drawRect(thumb);
+            tPaintCalculator sliderCalculator = calculateComplexControl(control, option, painter, widget);
+            sliderCalculator.performPaint();
             break;
         }
         case QStyle::CC_ScrollBar: {
@@ -1625,29 +1587,81 @@ drawNormalButton:
 QStyle::SubControl Style::hitTestComplexControl(ComplexControl cc, const QStyleOptionComplex* option, const QPoint& pt, const QWidget* w) const {
     if (option == nullptr) return QStyle::SC_None;
 
-    QRect rect = option->rect;
-
     switch (cc) {
         case QStyle::CC_Slider: {
-            const QStyleOptionSlider* slider = qstyleoption_cast<const QStyleOptionSlider*>(option);
-            if (slider == nullptr) return QStyle::SC_None;
+            tPaintCalculator sliderCalculator = calculateComplexControl(cc, option, nullptr, w);
+            if (sliderCalculator.boundsOf("thumb").contains(pt)) return QStyle::SC_SliderHandle;
+            return QStyle::SC_SliderGroove;
+        }
+        default:
+            return QCommonStyle::hitTestComplexControl(cc, option, pt, w);
+    }
+}
 
+tPaintCalculator Style::calculateComplexControl(ComplexControl cc, const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const {
+    tPaintCalculator calculator;
+    calculator.setPainter(painter);
+    calculator.setDrawBounds(option->rect);
+    calculator.setLayoutDirection(option->direction);
+
+    QPalette pal;
+
+    switch (cc) {
+        case CC_Slider: {
+            const QStyleOptionSlider* slider = qstyleoption_cast<const QStyleOptionSlider*>(option);
+            calculator.setLayoutDirection(widget->layoutDirection());
+
+            QRect rect = option->rect;
+
+            //Adjust rectangle to be only 10px tall if it is larger.
+            if (rect.height() > SC_DPI(16)) {
+                int reduction = (rect.height() - SC_DPI(16)) / 2;
+                rect.adjust(0, reduction, 0, -reduction);
+            }
+
+            //Draw border
+            calculator.addRect("border", rect, [ = ](QRectF paintBounds) {
+                painter->setPen(pal.color(QPalette::WindowText));
+                painter->setBrush(pal.color(QPalette::Window));
+                painter->drawRect(paintBounds.adjusted(0, 0, -1, -1));
+            });
+
+
+            //Draw selected portion
             QRect selection = rect;
-            selection.adjust(SC_DPI(1), SC_DPI(1), -SC_DPI(2), -SC_DPI(2));
+            selection.adjust(1, 1, -SC_DPI(2), -SC_DPI(2));
             selection.setWidth((((float) slider->sliderPosition - (float) slider->minimum) / ((float) slider->maximum - (float) slider->minimum)) * (float) selection.width());
 
+            calculator.addRect("selection", selection, [ = ](QRectF paintBounds) {
+                painter->setPen(transparent);
+                painter->setBrush(pal.brush(QPalette::Highlight));
+                painter->drawRect(paintBounds);
+            });
+
+            //Draw Thumb
             QRect thumb = rect;
-            thumb.setSize(QSize(rect.height() - 1, rect.height() - 1));
+            thumb.setSize(QSize(rect.height() - SC_DPI(1), rect.height() - SC_DPI(1)));
             thumb.moveLeft(selection.right() - (thumb.width() / 2));
 
-            if (thumb.contains(pt)) {
-                return QStyle::SC_SliderHandle;
-            } else {
-                return QStyle::SC_SliderGroove;
-            }
+            calculator.addRect("thumb", thumb, [ = ](QRectF paintBounds) {
+                if (slider->state & State_On || slider->state & State_Sunken) {
+                    QColor highlightColor = pal.color(QPalette::Highlight).darker(150);
+                    painter->setPen(pal.color(QPalette::HighlightedText));
+                    painter->setBrush(highlightColor);
+                } else if (slider->activeSubControls & QStyle::SC_SliderHandle) {
+                    painter->setPen(pal.color(QPalette::HighlightedText));
+                    painter->setBrush(pal.brush(QPalette::Highlight));
+                } else {
+                    painter->setPen(pal.color(QPalette::WindowText));
+                    painter->setBrush(pal.brush(QPalette::Window));
+                }
+                painter->drawRect(paintBounds);
+            });
+            break;
         }
     }
-    return QCommonStyle::hitTestComplexControl(cc, option, pt, w);
+
+    return calculator;
 }
 
 void Style::polish(QWidget* widget) {

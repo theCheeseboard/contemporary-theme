@@ -4,6 +4,7 @@
 #include "contemporary_global.h"
 #include <QCommonStyle>
 #include <QVariant>
+#include <tpaintcalculator.h>
 
 struct StylePrivate;
 class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle {
@@ -30,6 +31,8 @@ class CONTEMPORARYSHARED_EXPORT Style : public QCommonStyle {
         int styleHint(StyleHint sh, const QStyleOption* opt, const QWidget* w, QStyleHintReturn* shret) const override;
         int layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption* option, const QWidget* widget) const override;
         SubControl hitTestComplexControl(ComplexControl cc, const QStyleOptionComplex* option, const QPoint& pt, const QWidget* w) const override;
+
+        tPaintCalculator calculateComplexControl(ComplexControl cc, const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;
 
         QPixmap generatedIconPixmap(QIcon::Mode iconMode, const QPixmap& pixmap, const QStyleOption* opt) const override;
     private:
