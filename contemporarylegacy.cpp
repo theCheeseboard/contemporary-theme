@@ -821,27 +821,32 @@ drawNormalButton:
             painter->setPen(transparent);
 
             QPen textPen;
+            QBrush brush;
             if (option->state & QStyle::State_Selected) {
-                painter->setBrush(pal.brush(QPalette::Highlight));
+                brush = pal.brush(QPalette::Highlight);
                 textPen = pal.color(QPalette::HighlightedText);
                 //painter->setPen(pal.color(QPalette::HighlightedText));
             } else if (option->state & QStyle::State_MouseOver) {
                 QColor col = pal.color(QPalette::Highlight);
                 col.setAlpha(127);
-                painter->setBrush(col);
+                brush = col;
                 textPen = pal.color(QPalette::HighlightedText);
             } else {
                 if (item->features & QStyleOptionViewItem::Alternate) {
-                    painter->setBrush(pal.brush(QPalette::AlternateBase));
+                    brush = pal.brush(QPalette::AlternateBase);
                 } else {
-                    painter->setBrush(pal.brush(QPalette::Base));
+                    brush = pal.brush(QPalette::Base);
                 }
                 textPen = pal.color(QPalette::WindowText);
             }
-            painter->drawRect(rect);
 
-            painter->setBrush(item->backgroundBrush);
-            painter->drawRect(rect);
+            paintCalculator->addRect(rect, [ = ](QRectF paintBounds) {
+                painter->setBrush(brush);
+                painter->drawRect(paintBounds);
+
+                painter->setBrush(item->backgroundBrush);
+                painter->drawRect(paintBounds);
+            });
 
             QRect iconRect = rect, textRect = rect;
 
@@ -854,25 +859,26 @@ drawNormalButton:
                 textRect.setLeft(iconRect.right() + SC_DPI(6));
 
                 //Draw checkbox
-                painter->setPen(pal.color(QPalette::WindowText));
+                paintCalculator->addRect(iconRect, [ = ](QRectF paintBounds) {
+                    painter->setPen(pal.color(QPalette::WindowText));
+                    painter->setBrush(QBrush(transparent));
+                    painter->drawRect(paintBounds);
 
-                painter->setBrush(QBrush(transparent));
-                painter->drawRect(iconRect);
+                    if (item->checkState == Qt::Checked) {
+                        painter->setPen(transparent);
+                        painter->setBrush(pal.color(QPalette::WindowText));
+                        painter->drawRect(iconRect);
+                    } else if (item->checkState == Qt::PartiallyChecked) {
+                        QPolygon triangle;
+                        triangle.append(iconRect.topLeft());
+                        triangle.append(iconRect.bottomLeft());
+                        triangle.append(iconRect.topRight());
 
-                if (item->checkState == Qt::Checked) {
-                    painter->setPen(transparent);
-                    painter->setBrush(pal.color(QPalette::WindowText));
-                    painter->drawRect(iconRect);
-                } else if (item->checkState == Qt::PartiallyChecked) {
-                    QPolygon triangle;
-                    triangle.append(iconRect.topLeft());
-                    triangle.append(iconRect.bottomLeft());
-                    triangle.append(iconRect.topRight());
-
-                    painter->setPen(transparent);
-                    painter->setBrush(pal.color(QPalette::WindowText));
-                    painter->drawPolygon(triangle);
-                }
+                        painter->setPen(transparent);
+                        painter->setBrush(pal.color(QPalette::WindowText));
+                        painter->drawPolygon(triangle);
+                    }
+                });
             } else if (!item->icon.isNull()) {
                 QSize iconSize = ((QAbstractItemView*) widget)->iconSize();
                 //QSize iconSize(16, 16);
@@ -884,15 +890,20 @@ drawNormalButton:
                 QImage iconImage = icon.pixmap(iconSize).toImage();
                 iconRect.moveLeft(rect.left() + 2);
                 iconRect.moveTop(rect.top() + (rect.height() / 2) - (iconRect.height() / 2));
-                painter->drawImage(iconRect, iconImage);
                 textRect.setLeft(iconRect.right() + 6);
+
+                paintCalculator->addRect(iconRect, [ = ](QRectF paintBounds) {
+                    painter->drawImage(paintBounds, iconImage);
+                });
             } else {
                 textRect.setLeft(rect.left() + 6);
             }
 
-            painter->setPen(textPen);
-            painter->setFont(item->font);
-            painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, item->text);
+            paintCalculator->addRect(textRect, [ = ](QRectF paintBounds) {
+                painter->setPen(textPen);
+                painter->setFont(item->font);
+                painter->drawText(paintBounds, Qt::AlignLeft | Qt::AlignVCenter, item->text);
+            });
             break;
         }
         case QStyle::CE_DockWidgetTitle: {
