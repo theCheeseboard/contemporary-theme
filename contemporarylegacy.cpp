@@ -1209,6 +1209,11 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption* option
     }
     painter->setPen(transparent);
 
+    tPaintCalculator* paintCalculator = new tPaintCalculator();
+    paintCalculator->setPainter(painter);
+    paintCalculator->setDrawBounds(rect);
+    tPaintCalculatorScoper paintCalculatorScoper(paintCalculator);
+
     int halfHeight = rect.height() / 2;
     int halfWidth = rect.width() / 2;
 
@@ -1220,17 +1225,22 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption* option
             break;
         }
         case QStyle::PE_PanelLineEdit: {
-            if (((QLineEdit*) option->styleObject)->hasFrame()) {
-                painter->setBrush(pal.brush(QPalette::Window));
-                painter->drawRect(rect);
-                if (option->state & QStyle::State_Enabled) {
-                    painter->setPen(pal.color(QPalette::WindowText));
-                } else {
-                    painter->setPen(pal.color(QPalette::Disabled, QPalette::WindowText));
-                }
+            if (static_cast<QLineEdit*>(option->styleObject)->hasFrame()) {
+                paintCalculator->addRect(rect, [ = ](QRectF drawBounds) {
+                    painter->setBrush(pal.brush(QPalette::Window));
+                    painter->drawRect(drawBounds);
 
-                painter->drawLine(rect.topLeft(), rect.bottomLeft());
-                painter->drawLine(rect.bottomLeft(), rect.bottomRight());
+                    if (option->state & QStyle::State_Enabled) {
+                        painter->setPen(pal.color(QPalette::WindowText));
+                    } else {
+                        painter->setPen(pal.color(QPalette::Disabled, QPalette::WindowText));
+                    }
+
+                    painter->drawLine(drawBounds.bottomLeft() - QPointF(0, 1), drawBounds.bottomRight() - QPointF(0, 1));
+                });
+                paintCalculator->addRect(QRect(rect.topLeft(), rect.bottomLeft()), [ = ](QRectF drawBounds) {
+                    painter->drawLine(drawBounds.topLeft(), drawBounds.bottomLeft());
+                });
             }
             break;
         }
@@ -1310,18 +1320,24 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption* option
 
             if (option->state & QStyle::State_Item) {
                 //Draw horizontal branch
-                painter->setPen(pal.color(QPalette::WindowText));
-                painter->drawLine(rect.left() + rect.width() / 2, rect.top() + rect.height() / 2, rect.right(), rect.top() + rect.height() / 2);
+                paintCalculator->addRect(QRect(rect.left() + rect.width() / 2, rect.top() + rect.height() / 2, rect.width() / 2, 0), [ = ](QRectF paintBounds) {
+                    painter->setPen(pal.color(QPalette::WindowText));
+                    painter->drawLine(paintBounds.topLeft(), paintBounds.topRight());
+                });
 
                 //Draw top part of vertical branch
-                painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.top() + rect.height() / 2);
+                paintCalculator->addRect(QRect(rect.left() + rect.width() / 2, rect.top(), 0, rect.height() / 2), [ = ](QRectF paintBounds) {
+                    painter->drawLine(paintBounds.topLeft(), paintBounds.bottomLeft());
+                });
             }
 
 
             if (option->state & QStyle::State_Sibling) {
                 //Show vertical branch
-                painter->setPen(pal.color(QPalette::WindowText));
-                painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.bottom());
+                paintCalculator->addRect(QRect(rect.left() + rect.width() / 2, rect.top(), 0, rect.height()), [ = ](QRectF paintBounds) {
+                    painter->setPen(pal.color(QPalette::WindowText));
+                    painter->drawLine(paintBounds.topLeft(), paintBounds.bottomLeft());
+                });
             }
 
             if (option->state & QStyle::State_Children) {
@@ -1330,8 +1346,10 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption* option
                 triangleRect.setTop(rect.top() + (rect.height()) / 2 - SC_DPI(4));
                 triangleRect.setLeft(rect.left() + (rect.width()) / 2 - SC_DPI(4));
                 triangleRect.setSize(QSize(SC_DPI(8), SC_DPI(8)));
-                painter->setBrush(pal.color(QPalette::WindowText));
-                painter->drawRect(triangleRect);
+                paintCalculator->addRect(triangleRect, [ = ](QRectF paintBounds) {
+                    painter->setBrush(pal.color(QPalette::WindowText));
+                    painter->drawRect(paintBounds);
+                });
             }
 
             if (option->state & QStyle::State_Open) {
@@ -1340,9 +1358,11 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption* option
                 triangleRect.setTop(rect.top() + (rect.height()) / 2 - SC_DPI(4));
                 triangleRect.setLeft(rect.left() + (rect.width()) / 2 - SC_DPI(4));
                 triangleRect.setSize(QSize(SC_DPI(8), SC_DPI(8)));
-                painter->setBrush(pal.color(QPalette::Window));
-                painter->setPen(pal.color(QPalette::WindowText));
-                painter->drawRect(triangleRect);
+                paintCalculator->addRect(triangleRect, [ = ](QRectF paintBounds) {
+                    painter->setBrush(pal.color(QPalette::Window));
+                    painter->setPen(pal.color(QPalette::WindowText));
+                    painter->drawRect(paintBounds);
+                });
             }
             break;
         }
