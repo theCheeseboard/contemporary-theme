@@ -3,8 +3,7 @@
 
 #include <QObject>
 #include <QMap>
-
-#include "pushbuttonanimation.h"
+#include "animation.h"
 
 struct AnimationPair {
     AnimationPair();
@@ -12,16 +11,15 @@ struct AnimationPair {
     const QWidget* widget = nullptr;
     Animation* anim = nullptr;
 
-    operator const char*() const {
+    operator const char* () const {
         return (const char*) widget;
     }
 };
 
-class AnimationEngine : public QObject
-{
+class AnimationEngine : public QObject {
         Q_OBJECT
     public:
-        explicit AnimationEngine(QObject *parent = nullptr);
+        explicit AnimationEngine(QObject* parent = nullptr);
 
         void registerWidget(QWidget* widget);
         void deregisterWidget(QWidget* widget);
