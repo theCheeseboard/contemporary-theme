@@ -6,6 +6,7 @@
 int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
     a.setStyle(new Contemporary());
+//    a.setStyle("breeze");
 
     bool isLight = false;
     QPalette pal;

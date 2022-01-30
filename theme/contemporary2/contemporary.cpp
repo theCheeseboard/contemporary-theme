@@ -8,45 +8,62 @@
 #include "animations/viewitemanimation.h"
 #include "animations/pushbuttonanimation.h"
 #include "animations/menuitemanimation.h"
+#include "animations/radiobuttonanimation.h"
 
 #include <QStyleOptionButton>
 #include <QAbstractItemView>
 #include <QLineEdit>
 
-Contemporary::Contemporary() {
-    oldStyle = new Style();
-    anim = new AnimationEngine;
+#include "focusDecorations/focusdecorationcontroller.h"
 
-    indeterminateTimer = new QTimer(this);
+struct ContemporaryPrivate {
+    uint indetermiateProgressSection = 0;
+    QTimer* indeterminateTimer = nullptr; //Increments the indeterminateProgressSection at regular intervals
+    QMap<WId, tVariantAnimation*>* animations;
+
+    Style* oldStyle;
+    AnimationEngine* anim;
+    FocusDecorationController* focusDecorations;
+};
+
+Contemporary::Contemporary() {
+    d = new ContemporaryPrivate();
+    d->oldStyle = new Style();
+    d->anim = new AnimationEngine;
+    d->focusDecorations = new FocusDecorationController();
+
+    d->indeterminateTimer = new QTimer(this);
     if (theLibsGlobal::instance()->powerStretchEnabled()) {
-        indeterminateTimer->setInterval(1000 / 5);
+        d->indeterminateTimer->setInterval(1000 / 5);
     } else {
-        indeterminateTimer->setInterval(1000 / 60);
+        d->indeterminateTimer->setInterval(1000 / 60);
     }
-    connect(indeterminateTimer, &QTimer::timeout, [ = ]() {
+    connect(d->indeterminateTimer, &QTimer::timeout, [ = ]() {
         //Yes, this can overflow - and that's good. :)
         if (theLibsGlobal::instance()->powerStretchEnabled()) {
-            indetermiateProgressSection += 120;
+            d->indetermiateProgressSection += 120;
         } else {
-            indetermiateProgressSection += 10;
+            d->indetermiateProgressSection += 10;
         }
     });
 
     connect(theLibsGlobal::instance(), &theLibsGlobal::powerStretchChanged, [ = ](bool isOn) {
         if (isOn) {
-            indeterminateTimer->setInterval(1000 / 5);
+            d->indeterminateTimer->setInterval(1000 / 5);
         } else {
-            indeterminateTimer->setInterval(1000 / 60);
+            d->indeterminateTimer->setInterval(1000 / 60);
         }
     });
 
-    animations = new QMap<WId, tVariantAnimation*>();
+    d->animations = new QMap<WId, tVariantAnimation*>();
 }
 
 Contemporary::~Contemporary() {
-    delete oldStyle;
-    delete anim;
-    delete animations;
+    delete d->oldStyle;
+    delete d->anim;
+    delete d->animations;
+    delete d->focusDecorations;
+    delete d;
 }
 
 void Contemporary::scheduleRepaint(const QWidget* widget, int after) const {
@@ -218,17 +235,17 @@ QSize Contemporary::sizeFromContents(ContentsType ct, const QStyleOption* opt, c
             return calculator.sizeWithMargins().toSize();
         }
         default:
-            return oldStyle->sizeFromContents(ct, opt, contentsSize, widget);
+            return d->oldStyle->sizeFromContents(ct, opt, contentsSize, widget);
     }
 
 }
 
 int Contemporary::pixelMetric(PixelMetric m, const QStyleOption* opt, const QWidget* widget) const {
-    return oldStyle->pixelMetric(m, opt, widget);
+    return d->oldStyle->pixelMetric(m, opt, widget);
 }
 
 QIcon Contemporary::standardIcon(StandardPixmap standardIcon, const QStyleOption* opt, const QWidget* widget) const {
-    return oldStyle->standardIcon(standardIcon, opt, widget);
+    return d->oldStyle->standardIcon(standardIcon, opt, widget);
 }
 
 void Contemporary::drawItemText(QPainter* painter, const QRect& rect, int alignment, const QPalette& palette, bool enabled, const QString& text, QPalette::ColorRole textRole) const {
@@ -268,33 +285,37 @@ QRect Contemporary::subElementRect(SubElement r, const QStyleOption* opt, const 
             return QRect();
 
         default:
-            return oldStyle->subElementRect(r, opt, widget);
+            return d->oldStyle->subElementRect(r, opt, widget);
     }
 
 }
 
 void Contemporary::polish(QWidget* widget) {
-    anim->registerWidget(widget);
+    d->anim->registerWidget(widget);
 
-    oldStyle->polish(widget);
+    d->oldStyle->polish(widget);
 }
 
 void Contemporary::unpolish(QWidget* widget) {
-    anim->deregisterWidget(widget);
+    d->anim->deregisterWidget(widget);
 }
 
 int Contemporary::styleHint(StyleHint sh, const QStyleOption* opt, const QWidget* w, QStyleHintReturn* shret) const {
     switch (sh) {
         case SH_Menu_FlashTriggeredItem:
+        case SH_Menu_SupportsSections:
+        case SH_ComboBox_Popup:
+        case SH_Menu_MouseTracking:
+        case SH_MenuBar_MouseTracking:
             return true;
 
         default:
-            return oldStyle->styleHint(sh, opt, w, shret);
+            return d->oldStyle->styleHint(sh, opt, w, shret);
     }
 }
 
 int Contemporary::layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption* option, const QWidget* widget) const {
-    return oldStyle->layoutSpacing(control1, control2, orientation, option, widget);
+    return d->oldStyle->layoutSpacing(control1, control2, orientation, option, widget);
 }
 
 Contemporary::SubControl Contemporary::hitTestComplexControl(ComplexControl cc, const QStyleOptionComplex* option, const QPoint& pt, const QWidget* w) const {
@@ -302,7 +323,7 @@ Contemporary::SubControl Contemporary::hitTestComplexControl(ComplexControl cc, 
         case CC_Slider:
             return hitTestSlider(option, pt, w);
         default:
-            return oldStyle->hitTestComplexControl(cc, option, pt, w);
+            return d->oldStyle->hitTestComplexControl(cc, option, pt, w);
     }
 }
 
@@ -351,7 +372,7 @@ void Contemporary::drawPrimitivePanelItemViewItem(const QStyleOption* option, QP
     if (opt == nullptr) return;
 
     const QAbstractItemView* itemView = qobject_cast<const QAbstractItemView*>(widget);
-    ViewItemAnimation* anim = qobject_cast<ViewItemAnimation*>(this->anim->a(widget));
+    ViewItemAnimation* anim = qobject_cast<ViewItemAnimation*>(d->anim->a(widget));
 
     QColor background;
     bool isHover = opt->state & State_MouseOver && (!itemView || itemView->selectionMode() != QAbstractItemView::NoSelection);
@@ -618,21 +639,44 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
     indicatorRect.moveCenter(QPoint(SC_DPI(13), opt->rect.center().y()));
     calculator.addRect("indicator", indicatorRect, [ = ](QRectF bounds) {
         painter->setPen(WINDOW_TEXT_COLOR);
+
+        QColor innerColor;
         if (opt->state & State_Sunken) {
-            painter->setBrush(WINDOW_PRESS_COLOR);
+            innerColor = WINDOW_PRESS_COLOR;
         } else if (opt->state & State_MouseOver) {
-            painter->setBrush(WINDOW_HOVER_COLOR);
+            innerColor = WINDOW_HOVER_COLOR;
         } else {
-            painter->setBrush(WINDOW_COLOR);
+            innerColor = WINDOW_COLOR;
         }
         if (isRadioButton) {
+            painter->setRenderHint(QPainter::Antialiasing);
+            painter->setBrush(WINDOW_TEXT_COLOR);
             painter->drawEllipse(opt->rect);
 
-            if (opt->state & State_On) {
-                painter->setBrush(WINDOW_TEXT_COLOR);
-                painter->drawEllipse(opt->rect);
+            painter->setBrush(innerColor);
+
+            QRectF onRect = opt->rect;
+            onRect.setSize(onRect.size() *= 0.6);
+            onRect.moveCenter(QRectF(opt->rect).center());
+
+            RadioButtonAnimation* anim = qobject_cast<RadioButtonAnimation*>(d->anim->a(widget));
+            if (anim) {
+                if (opt->state & State_On) {
+                    anim->setIndicatorRect(onRect);
+                } else {
+                    anim->setIndicatorRect(opt->rect);
+                }
+
+                painter->drawEllipse(anim->currentIndicatorRect());
+            } else {
+                if (opt->state & State_On) {
+                    painter->drawEllipse(onRect);
+                } else {
+                    painter->drawEllipse(opt->rect);
+                }
             }
         } else {
+            painter->setBrush(innerColor);
             painter->drawRect(opt->rect);
 
             if (opt->state & State_NoChange) {
@@ -673,7 +717,7 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
 
     calculator.addRect("background", opt->rect, [ = ](QRectF bounds) {
         //Get animation
-        PushButtonAnimation* anim = qobject_cast<PushButtonAnimation*>(this->anim->a(widget));
+        PushButtonAnimation* anim = qobject_cast<PushButtonAnimation*>(d->anim->a(widget));
 
         QColor backgroundColor;
         if (anim == nullptr) {
@@ -754,13 +798,13 @@ tPaintCalculator Contemporary::paintCalculatorProgressBar(const QStyleOption* op
 
         if (opt->maximum == 0 && opt->minimum == 0) {
             //Indeterminate progress bar
-            if (!indeterminateTimer->isActive()) {
+            if (!d->indeterminateTimer->isActive()) {
                 //Start the timer here to save CPU time if the timer is not needed.
-                indeterminateTimer->start();
+                d->indeterminateTimer->start();
             }
 
             int fullWidth = opt->rect.width() * 4;
-            int stageProgress = indetermiateProgressSection % fullWidth;
+            int stageProgress = d->indetermiateProgressSection % fullWidth;
             int stage = stageProgress / opt->rect.width();
             stageProgress = stageProgress % opt->rect.width();
 
@@ -842,7 +886,7 @@ tPaintCalculator Contemporary::paintCalculatorToolButton(const QStyleOptionCompl
 
     calculator.addRect("background", opt->rect, [ = ](QRectF bounds) {
         //Get animation
-        PushButtonAnimation* anim = qobject_cast<PushButtonAnimation*>(this->anim->a(widget));
+        PushButtonAnimation* anim = qobject_cast<PushButtonAnimation*>(d->anim->a(widget));
 
         QStyleOptionButton buttonStyle;
         buttonStyle.direction = opt->direction;
@@ -1105,7 +1149,7 @@ tPaintCalculator Contemporary::paintCalculatorMenuItem(const QStyleOption* optio
     calculator.setPainter(painter);
     calculator.setDrawBounds(option->rect);
 
-    MenuItemAnimation* anim = qobject_cast<MenuItemAnimation*>(this->anim->a(widget));
+    MenuItemAnimation* anim = qobject_cast<MenuItemAnimation*>(d->anim->a(widget));
 
     switch (opt->menuItemType) {
         case QStyleOptionMenuItem::Normal:
@@ -1352,3 +1396,13 @@ QRect Contemporary::subElementCheckBoxClickRect(const QStyleOption* option, cons
     return paintCalculatorCheckBox(option, nullptr, widget, false).visualBoundingRect().toRect();
 }
 
+
+
+void Contemporary::polish(QApplication* application) {
+    d->focusDecorations->setApplication(application);
+}
+
+void Contemporary::unpolish(QApplication* application) {
+    if (d->focusDecorations->application() == application) d->focusDecorations->clearApplication();
+
+}

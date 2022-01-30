@@ -3,7 +3,9 @@
 #include "pushbuttonanimation.h"
 #include "viewitemanimation.h"
 #include "menuitemanimation.h"
+#include "radiobuttonanimation.h"
 
+#include <QRadioButton>
 #include <QAbstractButton>
 #include <QAbstractItemView>
 #include <QMenu>
@@ -19,7 +21,9 @@ AnimationEngine::AnimationEngine(QObject* parent) : QObject(parent) {
 
 void AnimationEngine::registerWidget(QWidget* widget) {
     Animation* anim = nullptr;
-    if (qobject_cast<QAbstractButton*>(widget)) {
+    if (qobject_cast<QRadioButton*>(widget)) {
+        anim = new RadioButtonAnimation(widget);
+    } else if (qobject_cast<QAbstractButton*>(widget)) {
         anim = new PushButtonAnimation(widget);
     } else if (qobject_cast<QAbstractItemView*>(widget)) {
         anim = new ViewItemAnimation(widget);
@@ -32,7 +36,7 @@ void AnimationEngine::registerWidget(QWidget* widget) {
         pair.widget = widget;
         pair.anim = anim;
 
-        connect(widget, &QWidget::destroyed, [ = ] {
+        connect(widget, &QWidget::destroyed, this, [ = ] {
             this->deregisterWidget(widget);
         });
 
@@ -41,7 +45,7 @@ void AnimationEngine::registerWidget(QWidget* widget) {
 }
 
 void AnimationEngine::deregisterWidget(QWidget* widget) {
-    for (AnimationPair a : animations) {
+    for (AnimationPair a : qAsConst(animations)) {
         if (a.widget == widget) {
             a.anim->deleteLater();
             animations.removeOne(a);
@@ -51,7 +55,7 @@ void AnimationEngine::deregisterWidget(QWidget* widget) {
 }
 
 Animation* AnimationEngine::a(const QWidget* widget) {
-    for (AnimationPair a : animations) {
+    for (AnimationPair a : qAsConst(animations)) {
         if (a.widget == widget) return a.anim;
     }
     return nullptr;

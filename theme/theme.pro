@@ -17,6 +17,7 @@ SOURCES += \
     contemporary2/animations/animationengine.cpp \
     contemporary2/animations/menuitemanimation.cpp \
     contemporary2/animations/pushbuttonanimation.cpp \
+    contemporary2/animations/radiobuttonanimation.cpp \
     contemporary2/animations/viewitemanimation.cpp \
     contemporary2/contemporary.cpp \
     focusDecorations/focusdecoration.cpp \
@@ -33,6 +34,7 @@ HEADERS +=\
     contemporary2/animations/animationengine.h \
     contemporary2/animations/menuitemanimation.h \
     contemporary2/animations/pushbuttonanimation.h \
+    contemporary2/animations/radiobuttonanimation.h \
     contemporary2/animations/viewitemanimation.h \
     contemporary2/contemporary.h \
         contemporary_global.h \

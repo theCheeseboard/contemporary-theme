@@ -8,7 +8,7 @@
 #include <QStyleOptionButton>
 
 #define OPT_CAST(type) const type* opt = qstyleoption_cast<const type*>(option);
-#define OPT_VARS bool reverse = opt->direction == Qt::RightToLeft; Qt::AlignmentFlag textHorizontalAlignment = reverse ? Qt::AlignRight : Qt::AlignLeft;
+#define OPT_VARS bool reverse = opt->direction == Qt::RightToLeft; Qt::AlignmentFlag textHorizontalAlignment = reverse ? Qt::AlignRight : Qt::AlignLeft; Q_UNUSED(textHorizontalAlignment)
 
 #define WINDOW_TEXT_COLOR opt->palette.color(QPalette::WindowText)
 #define WINDOW_COLOR opt->palette.color(QPalette::Window)
@@ -23,6 +23,7 @@
 #define ACCENT_PRESS_COLOR ACCENT_COLOR.darker(150)
 #define ACCENT_TEXT_COLOR opt->palette.color(QPalette::HighlightedText)
 
+struct ContemporaryPrivate;
 class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
         Q_OBJECT
 
@@ -62,13 +63,10 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
     public slots:
 
     private:
-        Style* oldStyle;
+        ContemporaryPrivate* d;
+
         float getDPIScaling() const;
         void scheduleRepaint(const QWidget* widget, int after = 1000 / 60) const;
-
-        uint indetermiateProgressSection = 0;
-        QTimer* indeterminateTimer = nullptr; //Increments the indeterminateProgressSection at regular intervals
-        QMap<WId, tVariantAnimation*>* animations;
 
         void drawPrimitiveIndicatorCheckBox(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawPrimitiveIndicatorRadioButton(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
@@ -119,7 +117,10 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
 
         QColor buttonBackground(const QStyleOptionButton* opt, const QWidget* widget) const;
 
-        AnimationEngine* anim;
+        // QStyle interface
+    public:
+        void polish(QApplication* application) override;
+        void unpolish(QApplication* application) override;
 };
 
 #endif // CONTEMPORARY_H
