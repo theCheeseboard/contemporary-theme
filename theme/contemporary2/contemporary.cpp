@@ -9,6 +9,7 @@
 #include "animations/pushbuttonanimation.h"
 #include "animations/menuitemanimation.h"
 #include "animations/radiobuttonanimation.h"
+#include "animations/checkboxanimation.h"
 
 #include <QStyleOptionButton>
 #include <QAbstractItemView>
@@ -648,6 +649,7 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
         } else {
             innerColor = WINDOW_COLOR;
         }
+
         if (isRadioButton) {
             painter->setRenderHint(QPainter::Antialiasing);
             painter->setBrush(WINDOW_TEXT_COLOR);
@@ -676,19 +678,39 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
                 }
             }
         } else {
-            painter->setBrush(innerColor);
-            painter->drawRect(opt->rect);
+            CheckboxAnimation* anim = qobject_cast<CheckboxAnimation*>(d->anim->a(widget));
+            if (anim) {
+                anim->setIndicatorRect(opt->rect);
 
-            if (opt->state & State_NoChange) {
-                QPolygonF fill;
-                fill.append(opt->rect.topLeft());
-                fill.append(opt->rect.bottomLeft());
-                fill.append(opt->rect.bottomRight());
-                painter->setBrush(WINDOW_TEXT_COLOR);
-                painter->drawPolygon(fill);
-            } else if (opt->state & State_On) {
+                Qt::CheckState checkState = Qt::Unchecked;
+                if (opt->state & State_NoChange) checkState = Qt::PartiallyChecked;
+                if (opt->state & State_On) checkState = Qt::Checked;
+                anim->setCheckState(checkState);
+
                 painter->setBrush(WINDOW_TEXT_COLOR);
                 painter->drawRect(opt->rect);
+
+                painter->setBrush(innerColor);
+                painter->drawRect(anim->currentIndicatorRect());
+
+                painter->setRenderHint(QPainter::Antialiasing);
+                painter->setPen(QPen(innerColor, SC_DPI(3), Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+                painter->drawPolyline(anim->currentCheckPolygon());
+            } else {
+                painter->setBrush(innerColor);
+                painter->drawRect(opt->rect);
+
+                if (opt->state & State_NoChange) {
+                    QPolygonF fill;
+                    fill.append(opt->rect.topLeft());
+                    fill.append(opt->rect.bottomLeft());
+                    fill.append(opt->rect.bottomRight());
+                    painter->setBrush(WINDOW_TEXT_COLOR);
+                    painter->drawPolygon(fill);
+                } else if (opt->state & State_On) {
+                    painter->setBrush(WINDOW_TEXT_COLOR);
+                    painter->drawRect(opt->rect);
+                }
             }
         }
     });

@@ -21,7 +21,7 @@ MenuItemAnimation::MenuItemAnimation(QWidget* animating, QObject* parent)
     connect(d->anim, &tVariantAnimation::finished, this, [ = ] {
         if (d->targetHoverRect.width() == 0) d->isClear = true;
     });
-    d->anim->setDuration(100);
+    d->anim->setDuration(50);
 }
 
 MenuItemAnimation::~MenuItemAnimation() {

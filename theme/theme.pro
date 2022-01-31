@@ -15,6 +15,7 @@ DEFINES += CONTEMPORARY_LIBRARY
 SOURCES += \
     contemporary2/animations/animation.cpp \
     contemporary2/animations/animationengine.cpp \
+    contemporary2/animations/checkboxanimation.cpp \
     contemporary2/animations/menuitemanimation.cpp \
     contemporary2/animations/pushbuttonanimation.cpp \
     contemporary2/animations/radiobuttonanimation.cpp \
@@ -32,6 +33,7 @@ SOURCES += \
 HEADERS +=\
     contemporary2/animations/animation.h \
     contemporary2/animations/animationengine.h \
+    contemporary2/animations/checkboxanimation.h \
     contemporary2/animations/menuitemanimation.h \
     contemporary2/animations/pushbuttonanimation.h \
     contemporary2/animations/radiobuttonanimation.h \

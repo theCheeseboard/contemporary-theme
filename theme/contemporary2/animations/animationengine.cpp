@@ -4,8 +4,10 @@
 #include "viewitemanimation.h"
 #include "menuitemanimation.h"
 #include "radiobuttonanimation.h"
+#include "checkboxanimation.h"
 
 #include <QRadioButton>
+#include <QCheckBox>
 #include <QAbstractButton>
 #include <QAbstractItemView>
 #include <QMenu>
@@ -23,6 +25,8 @@ void AnimationEngine::registerWidget(QWidget* widget) {
     Animation* anim = nullptr;
     if (qobject_cast<QRadioButton*>(widget)) {
         anim = new RadioButtonAnimation(widget);
+    } else if (qobject_cast<QCheckBox*>(widget)) {
+        anim = new CheckboxAnimation(widget);
     } else if (qobject_cast<QAbstractButton*>(widget)) {
         anim = new PushButtonAnimation(widget);
     } else if (qobject_cast<QAbstractItemView*>(widget)) {
