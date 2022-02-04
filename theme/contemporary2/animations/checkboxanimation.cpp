@@ -8,8 +8,8 @@ struct CheckboxAnimationPrivate {
     QRectF targetHoverRect;
 
     tVariantAnimation* checkAnim;
-    qreal currentCheckProgress = 0;
-    qreal targetCheckProgress = 0;
+    qreal currentCheckProgress = -1;
+    qreal targetCheckProgress = -1;
 
     QRectF indicatorRect;
 
@@ -19,6 +19,7 @@ struct CheckboxAnimationPrivate {
 
     bool isBackgroundSetUp = false;
     bool isCheckSetUp = false;
+    bool drawIndeterminatePoly = false;
 };
 
 CheckboxAnimation::CheckboxAnimation(QWidget* animating, QObject* parent)
@@ -35,7 +36,7 @@ CheckboxAnimation::CheckboxAnimation(QWidget* animating, QObject* parent)
             d->afterAnim = nullptr;
         }
     });
-    connect(d->backgroundAnim, SIGNAL(valueChanged(QVariant)), animatingWidget, SLOT(update()));
+    if (animatingWidget) connect(d->backgroundAnim, SIGNAL(valueChanged(QVariant)), animatingWidget, SLOT(update()));
     d->backgroundAnim->setEasingCurve(QEasingCurve::OutCubic);
     d->backgroundAnim->setDuration(100);
 
@@ -49,7 +50,7 @@ CheckboxAnimation::CheckboxAnimation(QWidget* animating, QObject* parent)
             d->afterAnim = nullptr;
         }
     });
-    connect(d->checkAnim, SIGNAL(valueChanged(QVariant)), animatingWidget, SLOT(update()));
+    if (animatingWidget) connect(d->checkAnim, SIGNAL(valueChanged(QVariant)), animatingWidget, SLOT(update()));
     d->checkAnim->setEasingCurve(QEasingCurve::OutCubic);
     d->checkAnim->setDuration(100);
 }
@@ -63,31 +64,45 @@ void CheckboxAnimation::setIndicatorRect(QRectF indicator) {
 }
 
 void CheckboxAnimation::setCheckState(Qt::CheckState checkState) {
-    if (d->currentCheckState == checkState && d->isBackgroundSetUp) return;
+    if (d->currentCheckState == checkState && d->isCheckSetUp) return;
 
     switch (d->currentCheckState) {
         case Qt::Checked:
             switch (checkState) {
                 case Qt::PartiallyChecked:
                     setCheckTarget(0);
+                    d->afterAnim = [ = ] {
+                        d->drawIndeterminatePoly = true;
+                        setCheckTarget(1);
+                    };
                     break;
                 case Qt::Unchecked:
                     setCheckTarget(0);
                     d->afterAnim = std::bind(&CheckboxAnimation::setIndicatorOff, this);
                     break;
                 case Qt::Checked:
+                    setIndicatorOn();
+                    setCheckTarget(1);
                     break;
             }
             break;
         case Qt::PartiallyChecked:
             switch (checkState) {
                 case Qt::Checked:
-                    setCheckTarget(1);
+                    setCheckTarget(0);
+                    d->afterAnim = [ = ] {
+                        d->drawIndeterminatePoly = false;
+                        setCheckTarget(1);
+                    };
                     break;
                 case Qt::Unchecked:
-                    setIndicatorOff();
+                    setCheckTarget(0);
+                    d->afterAnim = std::bind(&CheckboxAnimation::setIndicatorOff, this);
                     break;
                 case Qt::PartiallyChecked:
+                    setIndicatorOn();
+                    setCheckTarget(1);
+                    d->drawIndeterminatePoly = true;
                     break;
             }
             break;
@@ -95,8 +110,13 @@ void CheckboxAnimation::setCheckState(Qt::CheckState checkState) {
             switch (checkState) {
                 case Qt::PartiallyChecked:
                     setIndicatorOn();
+                    d->afterAnim = [ = ] {
+                        d->drawIndeterminatePoly = true;
+                        setCheckTarget(1);
+                    };
                     break;
                 case Qt::Checked:
+                    d->drawIndeterminatePoly = false;
                     setIndicatorOn();
                     d->afterAnim = std::bind(&CheckboxAnimation::setCheckTarget, this, 1);
                     break;
@@ -115,17 +135,31 @@ QRectF CheckboxAnimation::currentIndicatorRect() {
 }
 
 QPolygonF CheckboxAnimation::currentCheckPolygon() {
-    QLineF firstLinePart(QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.2, d->indicatorRect.top() + d->indicatorRect.height() * 0.6),
-        QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.5, d->indicatorRect.top() + d->indicatorRect.height() * 0.8));
-    QLineF secondLinePart(firstLinePart.p2(),
-        QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.8, d->indicatorRect.top() + d->indicatorRect.height() * 0.3));
+    if (d->drawIndeterminatePoly) {
+        double halfHeight = d->indicatorRect.center().y();
+        QLineF line(QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.25, halfHeight),
+            QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.75, halfHeight));
 
-    double animationProgress = d->checkAnim->currentValue().toReal();
-    QPolygonF poly;
-    poly.append(firstLinePart.p1());
-    poly.append(firstLinePart.pointAt(qBound(0.0, animationProgress * 2, 1.0)));
-    if (animationProgress > 0.5) poly.append(secondLinePart.pointAt(qBound(0.0, (animationProgress - 0.5) * 2, 1.0)));
-    return poly;
+        QPolygonF poly;
+        poly.append(line.p1());
+        poly.append(line.pointAt(d->checkAnim->currentValue().toReal()));
+        return poly;
+    } else {
+        QLineF firstLinePart(QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.23, d->indicatorRect.top() + d->indicatorRect.height() * 0.6),
+            QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.53, d->indicatorRect.top() + d->indicatorRect.height() * 0.8));
+        QLineF secondLinePart(firstLinePart.p2(),
+            QPointF(d->indicatorRect.left() + d->indicatorRect.width() * 0.83, d->indicatorRect.top() + d->indicatorRect.height() * 0.3));
+
+        double animationProgress = d->checkAnim->currentValue().toReal();
+        firstLinePart.translate(-d->indicatorRect.width() * 0.05 * (1 - animationProgress), 0);
+        secondLinePart.translate(-d->indicatorRect.width() * 0.05 * (1 - animationProgress), 0);
+
+        QPolygonF poly;
+        poly.append(firstLinePart.p1());
+        poly.append(firstLinePart.pointAt(qBound(0.0, animationProgress * 2, 1.0)));
+        if (animationProgress > 0.5) poly.append(secondLinePart.pointAt(qBound(0.0, (animationProgress - 0.5) * 2, 1.0)));
+        return poly;
+    }
 }
 
 void CheckboxAnimation::setIndicatorInnerRect(QRectF indicator) {

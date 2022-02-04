@@ -41,3 +41,18 @@ MainWindow::~MainWindow() {
     delete d;
 }
 
+
+void MainWindow::on_pushButton_4_clicked() {
+    ui->checkBox_4->setCheckState(Qt::Unchecked);
+}
+
+
+void MainWindow::on_pushButton_5_clicked() {
+    ui->checkBox_4->setCheckState(Qt::PartiallyChecked);
+}
+
+
+void MainWindow::on_pushButton_6_clicked() {
+    ui->checkBox_4->setCheckState(Qt::Checked);
+}
+

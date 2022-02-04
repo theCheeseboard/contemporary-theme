@@ -17,7 +17,7 @@ RadioButtonAnimation::RadioButtonAnimation(QWidget* animating, QObject* parent)
     connect(d->anim, &tVariantAnimation::valueChanged, this, [ = ](QVariant value) {
         d->currentHoverRect = value.toRect();
     });
-    connect(d->anim, SIGNAL(valueChanged(QVariant)), animatingWidget, SLOT(update()));
+    if (animatingWidget) connect(d->anim, SIGNAL(valueChanged(QVariant)), animatingWidget, SLOT(update()));
     d->anim->setDuration(200);
 }
 

@@ -639,6 +639,7 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
     indicatorRect.setHeight(SC_DPI(11));
     indicatorRect.moveCenter(QPoint(SC_DPI(13), opt->rect.center().y()));
     calculator.addRect("indicator", indicatorRect, [ = ](QRectF bounds) {
+        painter->save();
         painter->setPen(WINDOW_TEXT_COLOR);
 
         QColor innerColor;
@@ -662,57 +663,43 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
             onRect.moveCenter(QRectF(opt->rect).center());
 
             RadioButtonAnimation* anim = qobject_cast<RadioButtonAnimation*>(d->anim->a(widget));
-            if (anim) {
-                if (opt->state & State_On) {
-                    anim->setIndicatorRect(onRect);
-                } else {
-                    anim->setIndicatorRect(opt->rect);
-                }
-
-                painter->drawEllipse(anim->currentIndicatorRect());
-            } else {
-                if (opt->state & State_On) {
-                    painter->drawEllipse(onRect);
-                } else {
-                    painter->drawEllipse(opt->rect);
-                }
+            if (!anim) {
+                anim = new RadioButtonAnimation(nullptr);
+                anim->deleteLater();
             }
-        } else {
-            CheckboxAnimation* anim = qobject_cast<CheckboxAnimation*>(d->anim->a(widget));
-            if (anim) {
+
+            if (opt->state & State_On) {
+                anim->setIndicatorRect(onRect);
+            } else {
                 anim->setIndicatorRect(opt->rect);
-
-                Qt::CheckState checkState = Qt::Unchecked;
-                if (opt->state & State_NoChange) checkState = Qt::PartiallyChecked;
-                if (opt->state & State_On) checkState = Qt::Checked;
-                anim->setCheckState(checkState);
-
-                painter->setBrush(WINDOW_TEXT_COLOR);
-                painter->drawRect(opt->rect);
-
-                painter->setBrush(innerColor);
-                painter->drawRect(anim->currentIndicatorRect());
-
-                painter->setRenderHint(QPainter::Antialiasing);
-                painter->setPen(QPen(innerColor, SC_DPI(3), Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-                painter->drawPolyline(anim->currentCheckPolygon());
-            } else {
-                painter->setBrush(innerColor);
-                painter->drawRect(opt->rect);
-
-                if (opt->state & State_NoChange) {
-                    QPolygonF fill;
-                    fill.append(opt->rect.topLeft());
-                    fill.append(opt->rect.bottomLeft());
-                    fill.append(opt->rect.bottomRight());
-                    painter->setBrush(WINDOW_TEXT_COLOR);
-                    painter->drawPolygon(fill);
-                } else if (opt->state & State_On) {
-                    painter->setBrush(WINDOW_TEXT_COLOR);
-                    painter->drawRect(opt->rect);
-                }
             }
+
+            painter->drawEllipse(anim->currentIndicatorRect());
+        } else {
+            Qt::CheckState checkState = Qt::Unchecked;
+            if (opt->state & State_NoChange) checkState = Qt::PartiallyChecked;
+            if (opt->state & State_On) checkState = Qt::Checked;
+
+            CheckboxAnimation* anim = qobject_cast<CheckboxAnimation*>(d->anim->a(widget));
+            if (!anim) {
+                anim = new CheckboxAnimation(nullptr);
+                anim->deleteLater();
+            }
+
+            anim->setIndicatorRect(opt->rect);
+            anim->setCheckState(checkState);
+
+            painter->setBrush(WINDOW_TEXT_COLOR);
+            painter->drawRect(opt->rect);
+
+            painter->setBrush(innerColor);
+            painter->drawRect(anim->currentIndicatorRect());
+
+            painter->setRenderHint(QPainter::Antialiasing);
+            painter->setPen(QPen(innerColor, SC_DPI_T(1.5, qreal), Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            painter->drawPolyline(anim->currentCheckPolygon());
         }
+        painter->restore();
     });
 
     QRect textRect;
