@@ -143,6 +143,9 @@ void Contemporary::drawControl(ControlElement element, const QStyleOption* optio
         case CE_ToolBar:
             drawControlToolbar(option, painter, widget);
             break;
+        case CE_PushButton:
+            drawControlPushButton(option, painter, widget);
+            break;
         default:
             QCommonStyle::drawControl(element, option, painter, widget);
     }
@@ -242,7 +245,44 @@ QSize Contemporary::sizeFromContents(ContentsType ct, const QStyleOption* opt, c
 }
 
 int Contemporary::pixelMetric(PixelMetric m, const QStyleOption* opt, const QWidget* widget) const {
-    return d->oldStyle->pixelMetric(m, opt, widget);
+    switch (m) {
+        case PM_MessageBoxIconSize:
+            return SC_DPI(64);
+        case PM_SubMenuOverlap:
+            return 0;
+        case PM_MenuPanelWidth:
+        case PM_MenuBarItemSpacing:
+        case PM_MenuBarPanelWidth:
+
+        case PM_TabBarTabShiftHorizontal:
+        case PM_TabBarTabShiftVertical:
+
+        case PM_ToolBarItemMargin:
+            return 0;
+        case PM_MenuHMargin:
+        case PM_MenuVMargin:
+            return SC_DPI(1);
+        case PM_CheckBoxLabelSpacing:
+        case PM_RadioButtonLabelSpacing:
+            return SC_DPI(4);
+        case PM_ToolBarIconSize:
+        case PM_SliderControlThickness:
+            return SC_DPI(16);
+        case PM_ScrollView_ScrollBarOverlap:
+            return SC_DPI(5);
+        case PM_IndicatorWidth:
+        case PM_IndicatorHeight:
+        case PM_ExclusiveIndicatorHeight:
+        case PM_ExclusiveIndicatorWidth:
+            return SC_DPI(16);
+
+        case PM_ButtonShiftHorizontal:
+        case PM_ButtonShiftVertical:
+            return 0;
+
+        default:
+            return QCommonStyle::pixelMetric(m, opt, widget);
+    }
 }
 
 QIcon Contemporary::standardIcon(StandardPixmap standardIcon, const QStyleOption* opt, const QWidget* widget) const {
@@ -557,6 +597,17 @@ void Contemporary::drawControlToolbar(const QStyleOption* option, QPainter* pain
     painter->setPen(Qt::transparent);
     painter->setPen(WINDOW_COLOR);
     painter->drawRect(opt->rect);
+}
+
+void Contemporary::drawControlPushButton(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
+    OPT_CAST(QStyleOptionButton);
+    if (opt == nullptr) return;
+
+    if (opt->features & QStyleOptionButton::CommandLinkButton) {
+        drawPrimitive(PE_PanelButtonCommand, option, painter, widget);
+    } else {
+        QCommonStyle::drawControl(CE_PushButton, option, painter, widget);
+    }
 }
 
 void Contemporary::drawControlMenuItem(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {

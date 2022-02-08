@@ -90,6 +90,7 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
         void drawControlMenubarEmptyArea(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawControlMenubarItem(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawControlToolbar(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
+        void drawControlPushButton(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
 
         void drawComplexComboBox(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;
         void drawComplexToolButton(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;

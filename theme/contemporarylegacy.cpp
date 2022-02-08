@@ -1699,7 +1699,7 @@ void Style::polish(QWidget* widget) {
     if (widget == nullptr) return;
     if (qobject_cast<QCommandLinkButton*>(widget)) {
         widget->setAttribute(Qt::WA_Hover);
-        widget->setAttribute(Qt::WA_StyledBackground);
+        widget->setAttribute(Qt::WA_StyledBackground, true);
     } else if (qobject_cast<QPushButton*>(widget) ||
         qobject_cast<QCheckBox*>(widget) ||
         qobject_cast<QComboBox*>(widget) ||
