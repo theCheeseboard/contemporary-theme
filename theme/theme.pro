@@ -19,6 +19,7 @@ SOURCES += \
     contemporary2/animations/menuitemanimation.cpp \
     contemporary2/animations/pushbuttonanimation.cpp \
     contemporary2/animations/radiobuttonanimation.cpp \
+    contemporary2/animations/scrollbaranimation.cpp \
     contemporary2/animations/viewitemanimation.cpp \
     contemporary2/contemporary.cpp \
     focusDecorations/focusdecoration.cpp \
@@ -28,7 +29,8 @@ SOURCES += \
     contemporarylegacy.cpp \
     widgetHandlers/abstractitemviewhandler.cpp \
     widgetHandlers/abstractscrollareahandler.cpp \
-    widgetHandlers/abstractwidgethandler.cpp
+    widgetHandlers/abstractwidgethandler.cpp \
+    widgetHandlers/scrollbarhandler.cpp
 
 HEADERS +=\
     contemporary2/animations/animation.h \
@@ -37,6 +39,7 @@ HEADERS +=\
     contemporary2/animations/menuitemanimation.h \
     contemporary2/animations/pushbuttonanimation.h \
     contemporary2/animations/radiobuttonanimation.h \
+    contemporary2/animations/scrollbaranimation.h \
     contemporary2/animations/viewitemanimation.h \
     contemporary2/contemporary.h \
         contemporary_global.h \
@@ -46,7 +49,8 @@ HEADERS +=\
     contemporarylegacy.h \
     widgetHandlers/abstractitemviewhandler.h \
     widgetHandlers/abstractscrollareahandler.h \
-    widgetHandlers/abstractwidgethandler.h
+    widgetHandlers/abstractwidgethandler.h \
+    widgetHandlers/scrollbarhandler.h
 
 win32 {
     # Include the-libs build tools

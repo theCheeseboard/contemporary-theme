@@ -1,22 +1,25 @@
 #include "pushbuttonanimation.h"
 
-#include <QAbstractButton>
 #include "tvariantanimation.h"
+#include <QAbstractButton>
 
 struct PushButtonAnimationPrivate {
-    tVariantAnimation* anim;
-    QColor targetColor;
-    QColor currentColor;
+        tVariantAnimation* anim;
+        QColor targetColor;
+        QColor currentColor;
 };
 
-PushButtonAnimation::PushButtonAnimation(QWidget* animating, QObject* parent) : Animation(animating, parent) {
+PushButtonAnimation::PushButtonAnimation(QWidget* animating, QObject* parent) :
+    Animation(animating, parent) {
     d = new PushButtonAnimationPrivate();
 
     d->anim = new tVariantAnimation(this);
-    connect(d->anim, &tVariantAnimation::valueChanged, this, [ = ](QVariant value) {
+    connect(d->anim, &tVariantAnimation::valueChanged, this, [=](QVariant value) {
         d->currentColor = value.value<QColor>();
     });
-    connect(d->anim, SIGNAL(valueChanged(QVariant)), animatingWidget, SLOT(update()));
+    connect(d->anim, &QVariantAnimation::valueChanged, animatingWidget, [=] {
+        animatingWidget->update();
+    });
     d->anim->setDuration(100);
 
     d->currentColor = animatingWidget->palette().color(QPalette::Button);

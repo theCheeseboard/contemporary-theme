@@ -1,24 +1,25 @@
 #include "animationengine.h"
 
-#include "pushbuttonanimation.h"
-#include "viewitemanimation.h"
-#include "menuitemanimation.h"
-#include "radiobuttonanimation.h"
 #include "checkboxanimation.h"
+#include "menuitemanimation.h"
+#include "pushbuttonanimation.h"
+#include "radiobuttonanimation.h"
+#include "scrollbaranimation.h"
+#include "viewitemanimation.h"
 
-#include <QRadioButton>
-#include <QCheckBox>
 #include <QAbstractButton>
 #include <QAbstractItemView>
-#include <QMenu>
+#include <QCheckBox>
 #include <QDebug>
+#include <QMenu>
+#include <QRadioButton>
+#include <QScrollBar>
 
 AnimationPair::AnimationPair() {
-
 }
 
-AnimationEngine::AnimationEngine(QObject* parent) : QObject(parent) {
-
+AnimationEngine::AnimationEngine(QObject* parent) :
+    QObject(parent) {
 }
 
 void AnimationEngine::registerWidget(QWidget* widget) {
@@ -33,6 +34,8 @@ void AnimationEngine::registerWidget(QWidget* widget) {
         anim = new ViewItemAnimation(widget);
     } else if (qobject_cast<QMenu*>(widget)) {
         anim = new MenuItemAnimation(widget);
+    } else if (qobject_cast<QScrollBar*>(widget)) {
+        anim = new ScrollBarAnimation(widget);
     }
 
     if (anim) {
@@ -40,7 +43,7 @@ void AnimationEngine::registerWidget(QWidget* widget) {
         pair.widget = widget;
         pair.anim = anim;
 
-        connect(widget, &QWidget::destroyed, this, [ = ] {
+        connect(widget, &QWidget::destroyed, this, [=] {
             this->deregisterWidget(widget);
         });
 

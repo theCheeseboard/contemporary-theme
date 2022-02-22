@@ -1,14 +1,17 @@
 #ifndef CONTEMPORARY_H
 #define CONTEMPORARY_H
 
-#include "contemporarylegacy.h"
 #include "animations/animationengine.h"
-#include <tvariantanimation.h>
-#include <tpaintcalculator.h>
+#include "contemporarylegacy.h"
 #include <QStyleOptionButton>
+#include <tpaintcalculator.h>
+#include <tvariantanimation.h>
 
 #define OPT_CAST(type) const type* opt = qstyleoption_cast<const type*>(option);
-#define OPT_VARS bool reverse = opt->direction == Qt::RightToLeft; Qt::AlignmentFlag textHorizontalAlignment = reverse ? Qt::AlignRight : Qt::AlignLeft; Q_UNUSED(textHorizontalAlignment)
+#define OPT_VARS                                                                          \
+    bool reverse = opt->direction == Qt::RightToLeft;                                     \
+    Qt::AlignmentFlag textHorizontalAlignment = reverse ? Qt::AlignRight : Qt::AlignLeft; \
+    Q_UNUSED(textHorizontalAlignment)
 
 #define WINDOW_TEXT_COLOR opt->palette.color(QPalette::WindowText)
 #define WINDOW_COLOR opt->palette.color(QPalette::Window)
@@ -95,6 +98,7 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
         void drawComplexComboBox(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;
         void drawComplexToolButton(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;
         void drawComplexSlider(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;
+        void drawComplexScrollBar(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;
 
         QRect subElementCheckBoxIndicator(const QStyleOption* option, const QWidget* widget) const;
         QRect subElementCheckBoxContents(const QStyleOption* option, const QWidget* widget) const;
@@ -113,6 +117,7 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
         tPaintCalculator paintCalculatorComboBox(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         tPaintCalculator paintCalculatorMenuBarItem(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         tPaintCalculator paintCalculatorMenuItem(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
+        tPaintCalculator paintCalculatorScrollBar(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
 
         QPixmap shortcutPixmap(const QFont font, const QPalette pal, const QString text) const;
 

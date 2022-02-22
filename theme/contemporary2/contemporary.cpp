@@ -1,30 +1,31 @@
 #include "contemporary.h"
 
-#include <QTimer>
-#include <QPainter>
 #include <QDesktopWidget>
+#include <QPainter>
+#include <QTimer>
 #include <tpaintcalculator.h>
 
-#include "animations/viewitemanimation.h"
-#include "animations/pushbuttonanimation.h"
-#include "animations/menuitemanimation.h"
-#include "animations/radiobuttonanimation.h"
 #include "animations/checkboxanimation.h"
+#include "animations/menuitemanimation.h"
+#include "animations/pushbuttonanimation.h"
+#include "animations/radiobuttonanimation.h"
+#include "animations/scrollbaranimation.h"
+#include "animations/viewitemanimation.h"
 
-#include <QStyleOptionButton>
 #include <QAbstractItemView>
 #include <QLineEdit>
+#include <QStyleOptionButton>
 
 #include "focusDecorations/focusdecorationcontroller.h"
 
 struct ContemporaryPrivate {
-    uint indetermiateProgressSection = 0;
-    QTimer* indeterminateTimer = nullptr; //Increments the indeterminateProgressSection at regular intervals
-    QMap<WId, tVariantAnimation*>* animations;
+        uint indetermiateProgressSection = 0;
+        QTimer* indeterminateTimer = nullptr; // Increments the indeterminateProgressSection at regular intervals
+        QMap<WId, tVariantAnimation*>* animations;
 
-    Style* oldStyle;
-    AnimationEngine* anim;
-    FocusDecorationController* focusDecorations;
+        Style* oldStyle;
+        AnimationEngine* anim;
+        FocusDecorationController* focusDecorations;
 };
 
 Contemporary::Contemporary() {
@@ -39,8 +40,8 @@ Contemporary::Contemporary() {
     } else {
         d->indeterminateTimer->setInterval(1000 / 60);
     }
-    connect(d->indeterminateTimer, &QTimer::timeout, [ = ]() {
-        //Yes, this can overflow - and that's good. :)
+    connect(d->indeterminateTimer, &QTimer::timeout, [=]() {
+        // Yes, this can overflow - and that's good. :)
         if (theLibsGlobal::instance()->powerStretchEnabled()) {
             d->indetermiateProgressSection += 120;
         } else {
@@ -48,7 +49,7 @@ Contemporary::Contemporary() {
         }
     });
 
-    connect(theLibsGlobal::instance(), &theLibsGlobal::powerStretchChanged, [ = ](bool isOn) {
+    connect(theLibsGlobal::instance(), &theLibsGlobal::powerStretchChanged, [=](bool isOn) {
         if (isOn) {
             d->indeterminateTimer->setInterval(1000 / 5);
         } else {
@@ -162,6 +163,9 @@ void Contemporary::drawComplexControl(ComplexControl control, const QStyleOption
         case CC_Slider:
             drawComplexSlider(option, painter, widget);
             break;
+        case CC_ScrollBar:
+            drawComplexScrollBar(option, painter, widget);
+            break;
         default:
             QCommonStyle::drawComplexControl(control, option, painter, widget);
     }
@@ -224,24 +228,26 @@ void Contemporary::drawPrimitive(PrimitiveElement primitive, const QStyleOption*
         case PE_Frame:
             drawPrimitiveFrame(option, painter, widget);
             break;
-            //default: oldStyle->drawPrimitive(primitive, option, painter, widget);
+            // default: oldStyle->drawPrimitive(primitive, option, painter, widget);
     }
 }
 
 QSize Contemporary::sizeFromContents(ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget) const {
     switch (ct) {
-        case CT_MenuItem: {
-            QStyleOptionMenuItem item(*static_cast<const QStyleOptionMenuItem*>(opt));
-            item.rect = QRect(0, 0, 1, pixelMetric(PM_SmallIconSize, &item, widget) + SC_DPI(8));
+        case CT_MenuItem:
+            {
+                QStyleOptionMenuItem item(*static_cast<const QStyleOptionMenuItem*>(opt));
+                item.rect = QRect(0, 0, 1, pixelMetric(PM_SmallIconSize, &item, widget) + SC_DPI(8));
 
-            tPaintCalculator calculator = paintCalculatorMenuItem(&item, nullptr, widget);
-            calculator.setBoundsCalculationExcludeList({"background"});
-            return calculator.sizeWithMargins().toSize();
-        }
+                tPaintCalculator calculator = paintCalculatorMenuItem(&item, nullptr, widget);
+                calculator.setBoundsCalculationExcludeList({"background"});
+                return calculator.sizeWithMargins().toSize();
+            }
+        case CT_ScrollBar:
+            return QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
         default:
             return d->oldStyle->sizeFromContents(ct, opt, contentsSize, widget);
     }
-
 }
 
 int Contemporary::pixelMetric(PixelMetric m, const QStyleOption* opt, const QWidget* widget) const {
@@ -268,8 +274,9 @@ int Contemporary::pixelMetric(PixelMetric m, const QStyleOption* opt, const QWid
         case PM_ToolBarIconSize:
         case PM_SliderControlThickness:
             return SC_DPI(16);
+        case PM_ScrollBarExtent:
         case PM_ScrollView_ScrollBarOverlap:
-            return SC_DPI(5);
+            return SC_DPI(10);
         case PM_IndicatorWidth:
         case PM_IndicatorHeight:
         case PM_ExclusiveIndicatorHeight:
@@ -328,7 +335,6 @@ QRect Contemporary::subElementRect(SubElement r, const QStyleOption* opt, const 
         default:
             return d->oldStyle->subElementRect(r, opt, widget);
     }
-
 }
 
 void Contemporary::polish(QWidget* widget) {
@@ -397,7 +403,6 @@ void Contemporary::drawPrimitivePanelLineEdit(const QStyleOption* option, QPaint
     if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(option->styleObject)) {
         if (!lineEdit->hasFrame()) return;
     }
-
 
     painter->setPen(WINDOW_TEXT_COLOR);
     if (reverse) {
@@ -475,7 +480,7 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption* option, QPai
 
     QRect rect = opt->rect;
     if (opt->state & QStyle::State_Item) {
-        //Draw horizontal branch
+        // Draw horizontal branch
         painter->setPen(WINDOW_TEXT_COLOR);
 
         if (reverse) {
@@ -484,18 +489,18 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption* option, QPai
             painter->drawLine(rect.left() + rect.width() / 2, rect.top() + rect.height() / 2, rect.right(), rect.top() + rect.height() / 2);
         }
 
-        //Draw top part of vertical branch
+        // Draw top part of vertical branch
         painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.top() + rect.height() / 2);
     }
 
     if (opt->state & QStyle::State_Sibling) {
-        //Show vertical branch
+        // Show vertical branch
         painter->setPen(WINDOW_TEXT_COLOR);
         painter->drawLine(rect.left() + rect.width() / 2, rect.top(), rect.left() + rect.width() / 2, rect.bottom());
     }
 
     if (opt->state & QStyle::State_Children) {
-        //Draw disclosure triangle (closed)
+        // Draw disclosure triangle (closed)
         QRect triangleRect = rect;
         triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4 * getDPIScaling());
         triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4 * getDPIScaling());
@@ -505,7 +510,7 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption* option, QPai
     }
 
     if (opt->state & QStyle::State_Open) {
-        //Show disclosure triangle (open)
+        // Show disclosure triangle (open)
         QRect triangleRect = rect;
         triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4 * getDPIScaling());
         triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4 * getDPIScaling());
@@ -520,16 +525,16 @@ void Contemporary::drawPrimitiveFrameFocusRect(const QStyleOption* option, QPain
     OPT_CAST(QStyleOptionFocusRect);
     if (opt == nullptr) return;
 
-    //No-op: focus rect is drawn by other means
+    // No-op: focus rect is drawn by other means
 
     /*QRect r;
     r.setLeft(0);
     r.setBottom(opt->rect.bottom());
     r.setWidth(opt->rect.width());
     r.setTop(opt->rect.bottom() - 2);*/
-//    painter->setBrush(QColor(255, 255, 255, 100));
-//    painter->setPen(Qt::transparent);
-//    painter->drawRect(opt->rect);
+    //    painter->setBrush(QColor(255, 255, 255, 100));
+    //    painter->setPen(Qt::transparent);
+    //    painter->drawRect(opt->rect);
 }
 
 void Contemporary::drawControlProgressBarContents(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
@@ -564,7 +569,6 @@ void Contemporary::drawControlHeaderSection(const QStyleOption* option, QPainter
     painter->drawLine(opt->rect.topRight(), opt->rect.bottomRight());
 
     if (opt->state & State_UpArrow) {
-
     }
 }
 
@@ -639,6 +643,10 @@ void Contemporary::drawComplexSlider(const QStyleOptionComplex* option, QPainter
     paintCalculatorSlider(option, painter, widget).performPaint();
 }
 
+void Contemporary::drawComplexScrollBar(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const {
+    paintCalculatorScrollBar(option, painter, widget).performPaint();
+}
+
 void Contemporary::drawControlCheckboxLabel(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
     paintCalculatorCheckBox(option, painter, widget, false).performPaint("contents");
 }
@@ -686,10 +694,10 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
     calculator.setDrawBounds(option->rect);
 
     QRect indicatorRect;
-    indicatorRect.setWidth(SC_DPI(11)); //11 to take the pen width into account
+    indicatorRect.setWidth(SC_DPI(11)); // 11 to take the pen width into account
     indicatorRect.setHeight(SC_DPI(11));
     indicatorRect.moveCenter(QPoint(SC_DPI(13), opt->rect.center().y()));
-    calculator.addRect("indicator", indicatorRect, [ = ](QRectF bounds) {
+    calculator.addRect("indicator", indicatorRect, [=](QRectF bounds) {
         painter->save();
         painter->setPen(WINDOW_TEXT_COLOR);
 
@@ -758,7 +766,7 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
     textRect.setWidth(opt->fontMetrics.horizontalAdvance(opt->text) + 1);
     textRect.setTop(opt->rect.height() / 2 - opt->fontMetrics.height() / 2);
     textRect.setHeight(opt->fontMetrics.height());
-    calculator.addRect("contents", textRect, [ = ](QRectF bounds) {
+    calculator.addRect("contents", textRect, [=](QRectF bounds) {
         drawItemText(painter, opt->rect, textHorizontalAlignment | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->text, QPalette::WindowText);
     });
 
@@ -775,8 +783,8 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
     calculator.setPainter(painter);
     calculator.setDrawBounds(option->rect);
 
-    calculator.addRect("background", opt->rect, [ = ](QRectF bounds) {
-        //Get animation
+    calculator.addRect("background", opt->rect, [=](QRectF bounds) {
+        // Get animation
         PushButtonAnimation* anim = qobject_cast<PushButtonAnimation*>(d->anim->a(widget));
 
         QColor backgroundColor;
@@ -792,7 +800,7 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
         painter->drawRect(opt->rect);
 
         if (widget && widget->property("type") == "positive") {
-            //Draw border around button
+            // Draw border around button
             QPen pen;
             pen.setColor(QColor(0, 255, 0));
             pen.setWidth(3 * getDPIScaling());
@@ -826,16 +834,15 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
         image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
         theLibsGlobal::tintImage(image, WINDOW_TEXT_COLOR);
 
-        calculator.addRect("icon", iconRect, [ = ](QRectF paintBounds) {
+        calculator.addRect("icon", iconRect, [=](QRectF paintBounds) {
             painter->drawImage(paintBounds, image);
         });
     }
 
-    //Draw text
-    calculator.addRect("text", textRect, [ = ](QRectF paintBounds) {
+    // Draw text
+    calculator.addRect("text", textRect, [=](QRectF paintBounds) {
         drawItemText(painter, paintBounds.toRect(), Qt::AlignCenter, opt->palette, opt->state & QStyle::State_Enabled, opt->text, QPalette::ButtonText);
     });
-
 
     return calculator;
 }
@@ -850,16 +857,16 @@ tPaintCalculator Contemporary::paintCalculatorProgressBar(const QStyleOption* op
     calculator.setPainter(painter);
     calculator.setDrawBounds(option->rect);
 
-    calculator.addRect("contents", opt->rect, [ = ](QRectF paintBounds) {
+    calculator.addRect("contents", opt->rect, [=](QRectF paintBounds) {
         tPaintCalculator paintCalculator;
         paintCalculator.setLayoutDirection(opt->direction);
         paintCalculator.setPainter(painter);
         paintCalculator.setDrawBounds(opt->rect);
 
         if (opt->maximum == 0 && opt->minimum == 0) {
-            //Indeterminate progress bar
+            // Indeterminate progress bar
             if (!d->indeterminateTimer->isActive()) {
-                //Start the timer here to save CPU time if the timer is not needed.
+                // Start the timer here to save CPU time if the timer is not needed.
                 d->indeterminateTimer->start();
             }
 
@@ -869,51 +876,55 @@ tPaintCalculator Contemporary::paintCalculatorProgressBar(const QStyleOption* op
             stageProgress = stageProgress % opt->rect.width();
 
             switch (stage) {
-                case 0: {
-                    paintCalculator.addRect(QRect(opt->rect.left(), opt->rect.top(), stageProgress, opt->rect.height()), [ = ](QRectF paintBounds) {
-                        painter->setPen(Qt::transparent);
-                        painter->setBrush(WINDOW_COLOR);
-                        painter->drawRect(opt->rect);
-                        painter->setBrush(ACCENT_COLOR);
-                        painter->drawRect(paintBounds);
-                    });
-                    break;
-                }
-                case 1: {
-                    paintCalculator.addRect(QRect(stageProgress, opt->rect.top(), stageProgress * 2, opt->rect.height()), [ = ](QRectF paintBounds) {
-                        painter->setPen(Qt::transparent);
-                        painter->setBrush(ACCENT_COLOR);
-                        painter->drawRect(opt->rect);
-                        painter->setBrush(WINDOW_COLOR);
-                        painter->drawRect(paintBounds);
-                    });
-                    break;
-                }
-                case 2: {
-                    paintCalculator.addRect(QRect(opt->rect.left(), opt->rect.top(), stageProgress, opt->rect.height()), [ = ](QRectF paintBounds) {
-                        painter->setPen(Qt::transparent);
-                        painter->setBrush(ACCENT_COLOR);
-                        painter->drawRect(opt->rect);
-                        painter->setBrush(WINDOW_COLOR);
-                        painter->drawRect(paintBounds);
-                    });
-                    break;
-                }
-                case 3: {
-                    paintCalculator.addRect(QRect(stageProgress, opt->rect.top(), stageProgress * 2, opt->rect.height()), [ = ](QRectF paintBounds) {
-                        painter->setPen(Qt::transparent);
-                        painter->setBrush(WINDOW_COLOR);
-                        painter->drawRect(opt->rect);
-                        painter->setBrush(ACCENT_COLOR);
-                        painter->drawRect(paintBounds);
-                    });
-                }
+                case 0:
+                    {
+                        paintCalculator.addRect(QRect(opt->rect.left(), opt->rect.top(), stageProgress, opt->rect.height()), [=](QRectF paintBounds) {
+                            painter->setPen(Qt::transparent);
+                            painter->setBrush(WINDOW_COLOR);
+                            painter->drawRect(opt->rect);
+                            painter->setBrush(ACCENT_COLOR);
+                            painter->drawRect(paintBounds);
+                        });
+                        break;
+                    }
+                case 1:
+                    {
+                        paintCalculator.addRect(QRect(stageProgress, opt->rect.top(), stageProgress * 2, opt->rect.height()), [=](QRectF paintBounds) {
+                            painter->setPen(Qt::transparent);
+                            painter->setBrush(ACCENT_COLOR);
+                            painter->drawRect(opt->rect);
+                            painter->setBrush(WINDOW_COLOR);
+                            painter->drawRect(paintBounds);
+                        });
+                        break;
+                    }
+                case 2:
+                    {
+                        paintCalculator.addRect(QRect(opt->rect.left(), opt->rect.top(), stageProgress, opt->rect.height()), [=](QRectF paintBounds) {
+                            painter->setPen(Qt::transparent);
+                            painter->setBrush(ACCENT_COLOR);
+                            painter->drawRect(opt->rect);
+                            painter->setBrush(WINDOW_COLOR);
+                            painter->drawRect(paintBounds);
+                        });
+                        break;
+                    }
+                case 3:
+                    {
+                        paintCalculator.addRect(QRect(stageProgress, opt->rect.top(), stageProgress * 2, opt->rect.height()), [=](QRectF paintBounds) {
+                            painter->setPen(Qt::transparent);
+                            painter->setBrush(WINDOW_COLOR);
+                            painter->drawRect(opt->rect);
+                            painter->setBrush(ACCENT_COLOR);
+                            painter->drawRect(paintBounds);
+                        });
+                    }
             }
 
             scheduleRepaint(widget);
         } else {
             int width = (((float) opt->progress - (float) opt->minimum) / ((float) opt->maximum - (float) opt->minimum)) * opt->rect.width();
-            paintCalculator.addRect(QRect(opt->rect.left(), opt->rect.top(), width, opt->rect.bottom()), [ = ](QRectF paintBounds) {
+            paintCalculator.addRect(QRect(opt->rect.left(), opt->rect.top(), width, opt->rect.bottom()), [=](QRectF paintBounds) {
                 painter->setPen(Qt::transparent);
                 painter->setBrush(WINDOW_COLOR);
                 painter->drawRect(opt->rect);
@@ -925,7 +936,7 @@ tPaintCalculator Contemporary::paintCalculatorProgressBar(const QStyleOption* op
         paintCalculator.performPaint();
     });
 
-    calculator.addRect("groove", opt->rect, [ = ](QRectF paintBounds) {
+    calculator.addRect("groove", opt->rect, [=](QRectF paintBounds) {
         painter->setPen(WINDOW_TEXT_COLOR);
         painter->setBrush(Qt::transparent);
         painter->drawRect(paintBounds.adjusted(1, 1, -1, -1));
@@ -944,8 +955,8 @@ tPaintCalculator Contemporary::paintCalculatorToolButton(const QStyleOptionCompl
     calculator.setPainter(painter);
     calculator.setDrawBounds(option->rect);
 
-    calculator.addRect("background", opt->rect, [ = ](QRectF bounds) {
-        //Get animation
+    calculator.addRect("background", opt->rect, [=](QRectF bounds) {
+        // Get animation
         PushButtonAnimation* anim = qobject_cast<PushButtonAnimation*>(d->anim->a(widget));
 
         QStyleOptionButton buttonStyle;
@@ -979,57 +990,60 @@ tPaintCalculator Contemporary::paintCalculatorToolButton(const QStyleOptionCompl
     textRect.setWidth(opt->fontMetrics.horizontalAdvance(opt->text));
 
     switch (style) {
-        case Qt::ToolButtonIconOnly: {
-            //Center the icon
-            iconRect.moveCenter(opt->rect.center());
-            drawIcon = true;
-            break;
-        }
-        case Qt::ToolButtonTextOnly: {
-            //Center the text
-            textRect.moveCenter(opt->rect.center());
-            drawText = true;
-            break;
-        }
-        case Qt::ToolButtonTextBesideIcon: {
-            //Adjust elements relative to each other
-            iconRect.moveTopLeft(QPoint(0, 0));
-            textRect.moveCenter(iconRect.center());
-            textRect.moveLeft(iconRect.right() + SC_DPI(9));
+        case Qt::ToolButtonIconOnly:
+            {
+                // Center the icon
+                iconRect.moveCenter(opt->rect.center());
+                drawIcon = true;
+                break;
+            }
+        case Qt::ToolButtonTextOnly:
+            {
+                // Center the text
+                textRect.moveCenter(opt->rect.center());
+                drawText = true;
+                break;
+            }
+        case Qt::ToolButtonTextBesideIcon:
+            {
+                // Adjust elements relative to each other
+                iconRect.moveTopLeft(QPoint(0, 0));
+                textRect.moveCenter(iconRect.center());
+                textRect.moveLeft(iconRect.right() + SC_DPI(9));
 
-            //Now center them within the parent rectangle
-            QRect bounding = iconRect.united(textRect);
-            bounding.moveCenter(opt->rect.center());
-            iconRect.moveTopLeft(bounding.topLeft());
-            textRect.moveTopLeft(textRect.topLeft() + bounding.topLeft());
+                // Now center them within the parent rectangle
+                QRect bounding = iconRect.united(textRect);
+                bounding.moveCenter(opt->rect.center());
+                iconRect.moveTopLeft(bounding.topLeft());
+                textRect.moveTopLeft(textRect.topLeft() + bounding.topLeft());
 
-            drawText = true;
-            drawIcon = true;
-            break;
-        }
-        case Qt::ToolButtonTextUnderIcon: {
-            //Adjust elements relative to each other
-            iconRect.moveTopLeft(QPoint(0, 0));
-            textRect.moveCenter(iconRect.center());
-            textRect.moveTop(iconRect.bottom() + SC_DPI(9));
+                drawText = true;
+                drawIcon = true;
+                break;
+            }
+        case Qt::ToolButtonTextUnderIcon:
+            {
+                // Adjust elements relative to each other
+                iconRect.moveTopLeft(QPoint(0, 0));
+                textRect.moveCenter(iconRect.center());
+                textRect.moveTop(iconRect.bottom() + SC_DPI(9));
 
-            //Now center them within the parent rectangle
-            QRect bounding = iconRect.united(textRect);
-            bounding.moveCenter(opt->rect.center());
-            iconRect.moveTopLeft(bounding.topLeft());
-            textRect.moveTopLeft(textRect.topLeft() + bounding.topLeft());
+                // Now center them within the parent rectangle
+                QRect bounding = iconRect.united(textRect);
+                bounding.moveCenter(opt->rect.center());
+                iconRect.moveTopLeft(bounding.topLeft());
+                textRect.moveTopLeft(textRect.topLeft() + bounding.topLeft());
 
-            drawText = true;
-            drawIcon = true;
-            break;
-        }
+                drawText = true;
+                drawIcon = true;
+                break;
+            }
         case Qt::ToolButtonFollowStyle:
             break;
-
     }
 
     if (drawIcon) {
-        calculator.addRect("icon", iconRect, [ = ](QRectF paintBounds) {
+        calculator.addRect("icon", iconRect, [=](QRectF paintBounds) {
             QIcon icon = opt->icon;
             QImage image = icon.pixmap(opt->iconSize).toImage();
             image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
@@ -1040,8 +1054,8 @@ tPaintCalculator Contemporary::paintCalculatorToolButton(const QStyleOptionCompl
     }
 
     if (drawText) {
-        //Draw text
-        calculator.addRect("text", textRect, [ = ](QRectF paintBounds) {
+        // Draw text
+        calculator.addRect("text", textRect, [=](QRectF paintBounds) {
             drawItemText(painter, paintBounds.toRect(), Qt::AlignCenter, opt->palette, opt->state & QStyle::State_Enabled, opt->text, QPalette::ButtonText);
         });
     }
@@ -1078,19 +1092,19 @@ tPaintCalculator Contemporary::paintCalculatorSlider(const QStyleOptionComplex* 
         rightGroove.setTop(position);
     }
 
-    calculator.addRect("leftGroove", leftGroove, [ = ](QRectF paintBounds) {
+    calculator.addRect("leftGroove", leftGroove, [=](QRectF paintBounds) {
         painter->setPen(Qt::transparent);
         painter->setBrush(opt->palette.color(QPalette::Highlight));
         painter->drawRect(paintBounds);
     });
 
-    calculator.addRect("border", option->rect, [ = ](QRectF paintBounds) {
+    calculator.addRect("border", option->rect, [=](QRectF paintBounds) {
         painter->setPen(opt->palette.color(QPalette::WindowText));
         painter->setBrush(Qt::transparent);
         painter->drawRect(paintBounds.adjusted(1, 1, -1, -1));
     });
 
-    calculator.addRect("thumb", thumbRect, [ = ](QRectF paintBounds) {
+    calculator.addRect("thumb", thumbRect, [=](QRectF paintBounds) {
         painter->setPen(opt->palette.color(QPalette::WindowText));
         painter->setBrush(opt->palette.color(QPalette::Window));
         painter->drawRect(paintBounds.adjusted(1, 1, -1, -1));
@@ -1109,7 +1123,7 @@ tPaintCalculator Contemporary::paintCalculatorComboBox(const QStyleOption* optio
     calculator.setPainter(painter);
     calculator.setDrawBounds(option->rect);
 
-    calculator.addRect("background", opt->rect, [ = ](QRectF drawBounds) {
+    calculator.addRect("background", opt->rect, [=](QRectF drawBounds) {
         painter->setPen(WINDOW_TEXT_COLOR);
         QBrush brush = QBrush(WINDOW_COLOR);
 
@@ -1130,7 +1144,6 @@ tPaintCalculator Contemporary::paintCalculatorComboBox(const QStyleOption* optio
         painter->drawRect(drawBounds.adjusted(0, 0, -1, -1));
     });
 
-
     QRect textRect;
     textRect.setWidth(opt->fontMetrics.horizontalAdvance(opt->currentText) + 1);
     textRect.setHeight(opt->fontMetrics.height());
@@ -1142,8 +1155,8 @@ tPaintCalculator Contemporary::paintCalculatorComboBox(const QStyleOption* optio
         textRect.moveLeft(opt->rect.left() + SC_DPI(8) + opt->iconSize.width());
     }
 
-    calculator.addRect("text", textRect, [ = ](QRectF drawBounds) {
-        if (opt->editable) return; //Don't draw any text if it is editable
+    calculator.addRect("text", textRect, [=](QRectF drawBounds) {
+        if (opt->editable) return; // Don't draw any text if it is editable
         drawItemText(painter, drawBounds.toRect(), textHorizontalAlignment | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->currentText, QPalette::WindowText);
     });
 
@@ -1153,7 +1166,7 @@ tPaintCalculator Contemporary::paintCalculatorComboBox(const QStyleOption* optio
         arrowBounds.setHeight(opt->rect.height() / 2);
         arrowBounds.moveBottom(opt->rect.bottom() - SC_DPI(1));
         arrowBounds.moveRight(opt->rect.right() - SC_DPI(1));
-        calculator.addRect("arrow", arrowBounds, [ = ](QRectF drawBounds) {
+        calculator.addRect("arrow", arrowBounds, [=](QRectF drawBounds) {
             painter->setBrush(WINDOW_TEXT_COLOR);
             painter->setPen(Qt::transparent);
 
@@ -1185,14 +1198,14 @@ tPaintCalculator Contemporary::paintCalculatorMenuBarItem(const QStyleOption* op
     calculator.setDrawBounds(option->rect);
 
     if (opt->state & State_MouseOver | opt->state & State_Selected) {
-        calculator.addRect("selection", opt->rect, [ = ](QRectF drawBounds) {
+        calculator.addRect("selection", opt->rect, [=](QRectF drawBounds) {
             painter->setPen(Qt::transparent);
             painter->setBrush(ACCENT_COLOR);
             painter->drawRect(drawBounds);
         });
     }
 
-    calculator.addRect("text", opt->rect, [ = ](QRectF drawBounds) {
+    calculator.addRect("text", opt->rect, [=](QRectF drawBounds) {
         drawItemText(painter, drawBounds.toRect(), Qt::AlignCenter, opt->palette, opt->state & State_Enabled, opt->text, QPalette::Text);
     });
 
@@ -1213,148 +1226,189 @@ tPaintCalculator Contemporary::paintCalculatorMenuItem(const QStyleOption* optio
 
     switch (opt->menuItemType) {
         case QStyleOptionMenuItem::Normal:
-        case QStyleOptionMenuItem::SubMenu: {
-            QColor backgroundColor;
-            QPalette::ColorRole textColor;
+        case QStyleOptionMenuItem::SubMenu:
+            {
+                QColor backgroundColor;
+                QPalette::ColorRole textColor;
 
-            bool selected = false;
-            if (opt->state & QStyle::State_Selected || opt->state & QStyle::State_Sunken) {
-                backgroundColor = opt->palette.color(QPalette::Highlight);
-                textColor = QPalette::HighlightedText;
-                selected = true;
-                if (anim) anim->setHoverRect(opt->rect);
-            } else {
-                backgroundColor = opt->palette.color(QPalette::Window);
-                textColor = QPalette::WindowText;
-            }
-
-            if (!selected && anim && anim->lastSetRect() == opt->rect) anim->clearHoverRect();
-
-            calculator.addRect("background", opt->rect, [ = ](QRectF drawBounds) {
-                painter->setPen(Qt::transparent);
-                painter->setBrush(WINDOW_COLOR);
-                painter->drawRect(drawBounds);
-
-                if (anim) {
-                    if (anim->hoverRect().intersects(opt->rect)) {
-                        painter->setBrush(ACCENT_COLOR);
-                        painter->drawRect(anim->hoverRect());
-                    }
-                } else if (selected) {
-                    painter->setBrush(ACCENT_COLOR);
-                    painter->drawRect(opt->rect);
+                bool selected = false;
+                if (opt->state & QStyle::State_Selected || opt->state & QStyle::State_Sunken) {
+                    backgroundColor = opt->palette.color(QPalette::Highlight);
+                    textColor = QPalette::HighlightedText;
+                    selected = true;
+                    if (anim) anim->setHoverRect(opt->rect);
+                } else {
+                    backgroundColor = opt->palette.color(QPalette::Window);
+                    textColor = QPalette::WindowText;
                 }
-            });
 
-            if (opt->checkType != QStyleOptionMenuItem::NotCheckable) {
-                QStyleOptionButton indicatorStyle;
-                indicatorStyle.rect = opt->rect;
-                QRect indicatorRect = subElementRect(SE_CheckBoxIndicator, &indicatorStyle, nullptr);
+                if (!selected && anim && anim->lastSetRect() == opt->rect) anim->clearHoverRect();
 
-                QRect checkRect;
-                checkRect.setSize(indicatorRect.size());
-                checkRect.moveLeft(opt->rect.left() + SC_DPI(2));
-                checkRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - indicatorRect.height() / 2);
-
-                calculator.addRect("check", checkRect, [ = ](QRectF drawBounds) {
-                    QStyleOptionButton indicatorStyle;
-                    indicatorStyle.rect = drawBounds.toRect();
-                    if (opt->checked) indicatorStyle.state |= State_On;
-
-                    drawPrimitive(opt->checkType == QStyleOptionMenuItem::Exclusive ? PE_IndicatorRadioButton : PE_IndicatorCheckBox, &indicatorStyle, painter, nullptr);
-                });
-            } else if (!opt->icon.isNull()) {
-                QRect iconRect;
-                iconRect.setWidth(pixelMetric(PM_SmallIconSize, opt, widget));
-                iconRect.setHeight(pixelMetric(PM_SmallIconSize, opt, widget));
-                iconRect.moveLeft(opt->rect.left() + SC_DPI(2));
-                iconRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - pixelMetric(PM_SmallIconSize, opt, widget) / 2);
-
-                calculator.addRect("icon", iconRect, [ = ](QRectF drawBounds) {
-                    QImage icon = opt->icon.pixmap(pixelMetric(PM_SmallIconSize, opt, widget)).toImage();
-                    theLibsGlobal::tintImage(icon, WINDOW_TEXT_COLOR);
-                    painter->drawImage(drawBounds, icon);
-                });
-            }
-
-            QStringList textParts = opt->text.split("\t");
-            QString menuText = textParts.at(0);
-
-            QRect textRect;
-            textRect.setHeight(opt->fontMetrics.height());
-            textRect.setWidth(opt->fontMetrics.horizontalAdvance(menuText) + 1);
-            textRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - opt->fontMetrics.height() / 2);
-            textRect.moveLeft(opt->rect.left() + SC_DPI(4) + pixelMetric(PM_SmallIconSize, opt, widget));
-
-            calculator.addRect("text", textRect, [ = ](QRectF drawBounds) {
-                drawItemText(painter, drawBounds.toRect(), textHorizontalAlignment, opt->palette, opt->state & QStyle::State_Enabled, menuText, textColor);
-            });
-
-            if (textParts.count() == 2) {
-                QFont shortcutFont = opt->font;
-                shortcutFont.setPointSizeF(shortcutFont.pointSizeF() * 0.7);
-
-                QString shortcutText = textParts.at(1);
-                QPixmap shortcutPixmap = this->shortcutPixmap(shortcutFont, opt->palette, shortcutText);
-
-                QRect shortcutRect;
-                shortcutRect.setSize(shortcutPixmap.size());
-                shortcutRect.moveCenter(textRect.center());
-                shortcutRect.moveRight(opt->rect.right() - SC_DPI(4));
-                if (shortcutRect.left() < textRect.right() + SC_DPI(4)) shortcutRect.moveLeft(textRect.right() + SC_DPI(4));
-                calculator.addRect("shortcut", shortcutRect, [ = ](QRectF drawBounds) {
-                    painter->drawPixmap(drawBounds.toRect(), shortcutPixmap);
-                });
-            }
-
-            if (opt->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                QRect arrowRect;
-                arrowRect.setSize(SC_DPI_T(QSize(6, 8), QSize));
-                arrowRect.moveCenter(textRect.center());
-                arrowRect.moveRight(opt->rect.right() - SC_DPI(4));
-                if (arrowRect.left() < textRect.right() + SC_DPI(4)) arrowRect.moveLeft(textRect.right() + SC_DPI(4));
-
-                calculator.addRect("arrow", arrowRect, [ = ](QRectF drawBounds) {
-                    QPolygonF arrow;
-                    if (opt->direction == Qt::LeftToRight) {
-                        arrow.append(drawBounds.topLeft());
-                        arrow.append(drawBounds.bottomLeft());
-                        arrow.append(QPointF(drawBounds.right(), drawBounds.center().y()));
-                    } else {
-                        arrow.append(drawBounds.topRight());
-                        arrow.append(drawBounds.bottomRight());
-                        arrow.append(QPointF(drawBounds.left(), drawBounds.center().y()));
-                    }
-
+                calculator.addRect("background", opt->rect, [=](QRectF drawBounds) {
                     painter->setPen(Qt::transparent);
-                    painter->setBrush(opt->palette.color(textColor));
-                    painter->drawPolygon(arrow);
-                });
-            }
+                    painter->setBrush(WINDOW_COLOR);
+                    painter->drawRect(drawBounds);
 
-            break;
-        }
-        case QStyleOptionMenuItem::Separator: {
-            if (opt->text == "") {
-                calculator.addRect(QRect(opt->rect.left(), opt->rect.top(), opt->rect.width(), 1), [ = ](QRectF drawBounds) {
-                    painter->setPen(opt->palette.color(QPalette::WindowText));
-                    painter->drawLine(drawBounds.topLeft(), drawBounds.topRight());
+                    if (anim) {
+                        if (anim->hoverRect().intersects(opt->rect)) {
+                            painter->setBrush(ACCENT_COLOR);
+                            painter->drawRect(anim->hoverRect());
+                        }
+                    } else if (selected) {
+                        painter->setBrush(ACCENT_COLOR);
+                        painter->drawRect(opt->rect);
+                    }
                 });
-            } else {
+
+                if (opt->checkType != QStyleOptionMenuItem::NotCheckable) {
+                    QStyleOptionButton indicatorStyle;
+                    indicatorStyle.rect = opt->rect;
+                    QRect indicatorRect = subElementRect(SE_CheckBoxIndicator, &indicatorStyle, nullptr);
+
+                    QRect checkRect;
+                    checkRect.setSize(indicatorRect.size());
+                    checkRect.moveLeft(opt->rect.left() + SC_DPI(2));
+                    checkRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - indicatorRect.height() / 2);
+
+                    calculator.addRect("check", checkRect, [=](QRectF drawBounds) {
+                        QStyleOptionButton indicatorStyle;
+                        indicatorStyle.rect = drawBounds.toRect();
+                        if (opt->checked) indicatorStyle.state |= State_On;
+
+                        drawPrimitive(opt->checkType == QStyleOptionMenuItem::Exclusive ? PE_IndicatorRadioButton : PE_IndicatorCheckBox, &indicatorStyle, painter, nullptr);
+                    });
+                } else if (!opt->icon.isNull()) {
+                    QRect iconRect;
+                    iconRect.setWidth(pixelMetric(PM_SmallIconSize, opt, widget));
+                    iconRect.setHeight(pixelMetric(PM_SmallIconSize, opt, widget));
+                    iconRect.moveLeft(opt->rect.left() + SC_DPI(2));
+                    iconRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - pixelMetric(PM_SmallIconSize, opt, widget) / 2);
+
+                    calculator.addRect("icon", iconRect, [=](QRectF drawBounds) {
+                        QImage icon = opt->icon.pixmap(pixelMetric(PM_SmallIconSize, opt, widget)).toImage();
+                        theLibsGlobal::tintImage(icon, WINDOW_TEXT_COLOR);
+                        painter->drawImage(drawBounds, icon);
+                    });
+                }
+
+                QStringList textParts = opt->text.split("\t");
+                QString menuText = textParts.at(0);
+
                 QRect textRect;
-                textRect.setWidth(opt->fontMetrics.horizontalAdvance(opt->text) + 1);
                 textRect.setHeight(opt->fontMetrics.height());
-                textRect.moveCenter(opt->rect.center());
-                if (textRect.left() < opt->rect.left()) textRect.moveLeft(opt->rect.left());
+                textRect.setWidth(opt->fontMetrics.horizontalAdvance(menuText) + 1);
+                textRect.moveTop(opt->rect.top() + opt->rect.height() / 2 - opt->fontMetrics.height() / 2);
+                textRect.moveLeft(opt->rect.left() + SC_DPI(4) + pixelMetric(PM_SmallIconSize, opt, widget));
 
-                calculator.addRect(textRect, [ = ](QRectF drawBounds) {
-                    painter->setBrush(opt->palette.color(QPalette::WindowText));
-                    painter->drawRect(opt->rect);
-                    drawItemText(painter, drawBounds.toRect(), Qt::AlignCenter, opt->palette, opt->state & QStyle::State_Enabled, opt->text, QPalette::Window);
+                calculator.addRect("text", textRect, [=](QRectF drawBounds) {
+                    drawItemText(painter, drawBounds.toRect(), textHorizontalAlignment, opt->palette, opt->state & QStyle::State_Enabled, menuText, textColor);
                 });
+
+                if (textParts.count() == 2) {
+                    QFont shortcutFont = opt->font;
+                    shortcutFont.setPointSizeF(shortcutFont.pointSizeF() * 0.7);
+
+                    QString shortcutText = textParts.at(1);
+                    QPixmap shortcutPixmap = this->shortcutPixmap(shortcutFont, opt->palette, shortcutText);
+
+                    QRect shortcutRect;
+                    shortcutRect.setSize(shortcutPixmap.size());
+                    shortcutRect.moveCenter(textRect.center());
+                    shortcutRect.moveRight(opt->rect.right() - SC_DPI(4));
+                    if (shortcutRect.left() < textRect.right() + SC_DPI(4)) shortcutRect.moveLeft(textRect.right() + SC_DPI(4));
+                    calculator.addRect("shortcut", shortcutRect, [=](QRectF drawBounds) {
+                        painter->drawPixmap(drawBounds.toRect(), shortcutPixmap);
+                    });
+                }
+
+                if (opt->menuItemType == QStyleOptionMenuItem::SubMenu) {
+                    QRect arrowRect;
+                    arrowRect.setSize(SC_DPI_T(QSize(6, 8), QSize));
+                    arrowRect.moveCenter(textRect.center());
+                    arrowRect.moveRight(opt->rect.right() - SC_DPI(4));
+                    if (arrowRect.left() < textRect.right() + SC_DPI(4)) arrowRect.moveLeft(textRect.right() + SC_DPI(4));
+
+                    calculator.addRect("arrow", arrowRect, [=](QRectF drawBounds) {
+                        QPolygonF arrow;
+                        if (opt->direction == Qt::LeftToRight) {
+                            arrow.append(drawBounds.topLeft());
+                            arrow.append(drawBounds.bottomLeft());
+                            arrow.append(QPointF(drawBounds.right(), drawBounds.center().y()));
+                        } else {
+                            arrow.append(drawBounds.topRight());
+                            arrow.append(drawBounds.bottomRight());
+                            arrow.append(QPointF(drawBounds.left(), drawBounds.center().y()));
+                        }
+
+                        painter->setPen(Qt::transparent);
+                        painter->setBrush(opt->palette.color(textColor));
+                        painter->drawPolygon(arrow);
+                    });
+                }
+
+                break;
             }
-        }
+        case QStyleOptionMenuItem::Separator:
+            {
+                if (opt->text == "") {
+                    calculator.addRect(QRect(opt->rect.left(), opt->rect.top(), opt->rect.width(), 1), [=](QRectF drawBounds) {
+                        painter->setPen(opt->palette.color(QPalette::WindowText));
+                        painter->drawLine(drawBounds.topLeft(), drawBounds.topRight());
+                    });
+                } else {
+                    QRect textRect;
+                    textRect.setWidth(opt->fontMetrics.horizontalAdvance(opt->text) + 1);
+                    textRect.setHeight(opt->fontMetrics.height());
+                    textRect.moveCenter(opt->rect.center());
+                    if (textRect.left() < opt->rect.left()) textRect.moveLeft(opt->rect.left());
+
+                    calculator.addRect(textRect, [=](QRectF drawBounds) {
+                        painter->setBrush(opt->palette.color(QPalette::WindowText));
+                        painter->drawRect(opt->rect);
+                        drawItemText(painter, drawBounds.toRect(), Qt::AlignCenter, opt->palette, opt->state & QStyle::State_Enabled, opt->text, QPalette::Window);
+                    });
+                }
+            }
     }
+
+    return calculator;
+}
+
+tPaintCalculator Contemporary::paintCalculatorScrollBar(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
+    OPT_CAST(QStyleOptionSlider);
+    if (opt == nullptr) return tPaintCalculator();
+    OPT_VARS;
+
+    tPaintCalculator calculator;
+    calculator.setLayoutDirection(opt->direction);
+    calculator.setPainter(painter);
+    calculator.setDrawBounds(option->rect);
+
+    ScrollBarAnimation* anim = qobject_cast<ScrollBarAnimation*>(d->anim->a(widget));
+
+    double widthScaling = option->state & State_MouseOver ? 1 : 0.5;
+    if (anim) {
+        anim->setHasMouseFocus(option->state & State_MouseOver);
+        anim->setCurrentValue(opt->sliderValue);
+        widthScaling = anim->widthScaling();
+    }
+
+    QRectF sliderRect = this->subControlRect(QStyle::CC_ScrollBar, opt, SC_ScrollBarSlider, widget);
+
+    if (opt->orientation == Qt::Vertical) {
+        int right = sliderRect.right();
+        sliderRect.setWidth(sliderRect.width() * widthScaling);
+        sliderRect.moveRight(right);
+    } else {
+        int bottom = sliderRect.bottom();
+        sliderRect.setHeight(sliderRect.height() * widthScaling);
+        sliderRect.moveBottom(bottom);
+    }
+
+    calculator.addRect(sliderRect, [=](QRectF drawBounds) {
+        if (anim) painter->setOpacity(anim->opacity());
+        painter->fillRect(drawBounds, ACCENT_COLOR);
+    });
 
     return calculator;
 }
@@ -1374,7 +1428,7 @@ QPixmap Contemporary::shortcutPixmap(const QFont font, const QPalette pal, const
         bounds.moveTop(0);
         bounds.moveLeft(cx);
 
-        calculator.addRect(bounds, [ =, &painter](QRectF drawBounds) {
+        calculator.addRect(bounds, [=, &painter](QRectF drawBounds) {
             painter->setOpacity(0.7);
             painter->setPen(Qt::transparent);
             painter->setBrush(pal.color(QPalette::WindowText));
@@ -1456,13 +1510,10 @@ QRect Contemporary::subElementCheckBoxClickRect(const QStyleOption* option, cons
     return paintCalculatorCheckBox(option, nullptr, widget, false).visualBoundingRect().toRect();
 }
 
-
-
 void Contemporary::polish(QApplication* application) {
     d->focusDecorations->setApplication(application);
 }
 
 void Contemporary::unpolish(QApplication* application) {
     if (d->focusDecorations->application() == application) d->focusDecorations->clearApplication();
-
 }
