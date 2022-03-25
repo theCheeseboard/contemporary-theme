@@ -1,7 +1,6 @@
 #include "contemporarylegacy.h"
 
 #include <QDebug>
-#include <QDesktopWidget>
 #include <QGraphicsColorizeEffect>
 #include <QPainter>
 #include <QScroller>
@@ -50,21 +49,21 @@ Style::Style() {
     d->focusController = new FocusDecorationController();
 
     indeterminateTimer = new QTimer(this);
-    if (theLibsGlobal::instance()->powerStretchEnabled()) {
+    if (libContemporaryCommon::instance()->powerStretchEnabled()) {
         indeterminateTimer->setInterval(1000 / 5);
     } else {
         indeterminateTimer->setInterval(1000 / 60);
     }
     connect(indeterminateTimer, &QTimer::timeout, [=]() {
         // Yes, this can overflow - and that's good. :)
-        if (theLibsGlobal::instance()->powerStretchEnabled()) {
+        if (libContemporaryCommon::instance()->powerStretchEnabled()) {
             indetermiateProgressSection += 120;
         } else {
             indetermiateProgressSection += 10;
         }
     });
 
-    connect(theLibsGlobal::instance(), &theLibsGlobal::powerStretchChanged, [=](bool isOn) {
+    connect(libContemporaryCommon::instance(), &libContemporaryCommon::powerStretchChanged, [=](bool isOn) {
         if (isOn) {
             indeterminateTimer->setInterval(1000 / 5);
         } else {
@@ -88,7 +87,7 @@ Style::~Style() {
     d->focusController->deleteLater();
     delete d;
 
-    theLibsGlobal::instance()->disconnect();
+    libContemporaryCommon::instance()->disconnect();
     indeterminateTimer->deleteLater();
 }
 
@@ -221,7 +220,7 @@ drawNormalButton:
                     QIcon icon = button->icon;
                     QImage image = icon.pixmap(button->iconSize).toImage();
                     image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-                    theLibsGlobal::tintImage(image, textPen.color());
+                    libContemporaryCommon::tintImage(image, textPen.color());
 
                     paintCalculator->addRect(iconRect, [=](QRectF paintBounds) {
                         painter->drawImage(paintBounds, image);
@@ -651,7 +650,7 @@ drawNormalButton:
                                     QIcon icon = item->icon;
                                     QImage image = icon.pixmap(SC_DPI(16), SC_DPI(16)).toImage();
                                     image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-                                    theLibsGlobal::tintImage(image, textPen.color());
+                                    libContemporaryCommon::tintImage(image, textPen.color());
 
                                     paintCalculator->addRect(iconRect, [=](QRectF paintBounds) {
                                         painter->drawImage(paintBounds, image);
@@ -1204,7 +1203,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
                         colorizer.fillRect(image.rect(), textPen.brush());
                         colorizer.end();
                     }*/
-                    theLibsGlobal::tintImage(image, textPen.color());
+                    libContemporaryCommon::tintImage(image, textPen.color());
 
                     painter->drawImage(iconRect, image);
                 }
@@ -1344,7 +1343,7 @@ void Style::drawPrimitive(PrimitiveElement primitive, const QStyleOption* option
                 } else if (primitive == QStyle::PE_IndicatorArrowUp || primitive == QStyle::PE_IndicatorSpinUp) {
                     image = QIcon::fromTheme("go-up").pixmap(SC_DPI(16), SC_DPI(16)).toImage();
                 }
-                theLibsGlobal::tintImage(image, pal.color(QPalette::WindowText));
+                libContemporaryCommon::tintImage(image, pal.color(QPalette::WindowText));
 
                 QRect imageRect;
                 imageRect.setTop(rect.top() + (rect.height() / 2) - SC_DPI(8));
@@ -1584,7 +1583,7 @@ drawNormalButton:
                 const QStyleOptionToolBar* bar = qstyleoption_cast<const QStyleOptionToolBar*>(option);
                 if (bar == nullptr) return;
 
-                painter->setPen(pal.color(QPalette::Foreground));
+                painter->setPen(pal.color(QPalette::WindowText));
                 if (bar->direction == Qt::LeftToRight) {
                     painter->drawLine(rect.topLeft(), rect.bottomLeft());
                     painter->drawLine(rect.left() + SC_DPI(2), rect.top(), rect.left() + SC_DPI(2), rect.bottom());
@@ -1596,7 +1595,7 @@ drawNormalButton:
             }
         case QStyle::PE_IndicatorButtonDropDown:
             {
-                painter->setBrush(pal.brush(QPalette::Foreground));
+                painter->setBrush(pal.brush(QPalette::WindowText));
 
                 QPolygon pol;
                 pol.append(rect.bottomRight());
@@ -1648,7 +1647,7 @@ drawNormalButton:
         case QStyle::PE_PanelMenuBar:
         case QStyle::PE_FrameMenu:
         case PE_FrameFocusRect:
-        case QStyle::PE_FrameStatusBar:
+//        case QStyle::PE_FrameStatusBar:
         case QStyle::PE_FrameTabWidget:
         case QStyle::PE_FrameTabBarBase:
             {
@@ -2026,6 +2025,6 @@ QRect Style::subElementRect(SubElement r, const QStyleOption* opt, const QWidget
 
 QPixmap Style::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap& pixmap, const QStyleOption* opt) const {
     QImage image = pixmap.toImage();
-    theLibsGlobal::tintImage(image, opt->palette.color(QPalette::WindowText));
+    libContemporaryCommon::tintImage(image, opt->palette.color(QPalette::WindowText));
     return QPixmap::fromImage(image);
 }

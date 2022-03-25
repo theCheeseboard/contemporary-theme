@@ -68,7 +68,6 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
     private:
         ContemporaryPrivate* d;
 
-        float getDPIScaling() const;
         void scheduleRepaint(const QWidget* widget, int after = 1000 / 60) const;
 
         void drawPrimitiveIndicatorCheckBox(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;

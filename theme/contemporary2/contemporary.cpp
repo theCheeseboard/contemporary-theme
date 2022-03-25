@@ -1,6 +1,5 @@
 #include "contemporary.h"
 
-#include <QDesktopWidget>
 #include <QPainter>
 #include <QTimer>
 #include <tpaintcalculator.h>
@@ -35,21 +34,21 @@ Contemporary::Contemporary() {
     d->focusDecorations = new FocusDecorationController();
 
     d->indeterminateTimer = new QTimer(this);
-    if (theLibsGlobal::instance()->powerStretchEnabled()) {
+    if (libContemporaryCommon::instance()->powerStretchEnabled()) {
         d->indeterminateTimer->setInterval(1000 / 5);
     } else {
         d->indeterminateTimer->setInterval(1000 / 60);
     }
     connect(d->indeterminateTimer, &QTimer::timeout, [=]() {
         // Yes, this can overflow - and that's good. :)
-        if (theLibsGlobal::instance()->powerStretchEnabled()) {
+        if (libContemporaryCommon::instance()->powerStretchEnabled()) {
             d->indetermiateProgressSection += 120;
         } else {
             d->indetermiateProgressSection += 10;
         }
     });
 
-    connect(theLibsGlobal::instance(), &theLibsGlobal::powerStretchChanged, [=](bool isOn) {
+    connect(libContemporaryCommon::instance(), &libContemporaryCommon::powerStretchChanged, [=](bool isOn) {
         if (isOn) {
             d->indeterminateTimer->setInterval(1000 / 5);
         } else {
@@ -99,11 +98,6 @@ void Contemporary::tintImage(QImage& image, QColor tint) const {
         painter.fillRect(0, 0, image.width(), image.height(), tint);
         painter.end();
     }
-}
-
-float Contemporary::getDPIScaling() const {
-    float currentDPI = QApplication::desktop()->logicalDpiX();
-    return currentDPI / (float) 96;
 }
 
 void Contemporary::drawControl(ControlElement element, const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
@@ -502,9 +496,9 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption* option, QPai
     if (opt->state & QStyle::State_Children) {
         // Draw disclosure triangle (closed)
         QRect triangleRect = rect;
-        triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4 * getDPIScaling());
-        triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4 * getDPIScaling());
-        triangleRect.setSize(QSize(8 * getDPIScaling(), 8 * getDPIScaling()));
+        triangleRect.setTop(rect.top() + (rect.height()) / 2 - SC_DPI_W(4, widget));
+        triangleRect.setLeft(rect.left() + (rect.width()) / 2 - SC_DPI_W(4, widget));
+        triangleRect.setSize(QSize(SC_DPI_W(8, widget), SC_DPI_W(4, widget)));
         painter->setBrush(WINDOW_TEXT_COLOR);
         painter->drawRect(triangleRect);
     }
@@ -512,9 +506,9 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption* option, QPai
     if (opt->state & QStyle::State_Open) {
         // Show disclosure triangle (open)
         QRect triangleRect = rect;
-        triangleRect.setTop(rect.top() + (rect.height()) / 2 - 4 * getDPIScaling());
-        triangleRect.setLeft(rect.left() + (rect.width()) / 2 - 4 * getDPIScaling());
-        triangleRect.setSize(QSize(8 * getDPIScaling(), 8 * getDPIScaling()));
+        triangleRect.setTop(rect.top() + (rect.height()) / 2 - SC_DPI_W(4, widget));
+        triangleRect.setLeft(rect.left() + (rect.width()) / 2 - SC_DPI_W(4, widget));
+        triangleRect.setSize(QSize(SC_DPI_W(8, widget), SC_DPI_W(4, widget)));
         painter->setBrush(WINDOW_COLOR);
         painter->setPen(WINDOW_TEXT_COLOR);
         painter->drawRect(triangleRect);
@@ -803,7 +797,7 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
             // Draw border around button
             QPen pen;
             pen.setColor(QColor(0, 255, 0));
-            pen.setWidth(3 * getDPIScaling());
+            pen.setWidth(SC_DPI_W(3, widget));
             painter->setPen(pen);
 
             painter->setBrush(Qt::transparent);
@@ -832,7 +826,7 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
         QIcon icon = opt->icon;
         QImage image = icon.pixmap(opt->iconSize).toImage();
         image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-        theLibsGlobal::tintImage(image, WINDOW_TEXT_COLOR);
+        libContemporaryCommon::tintImage(image, WINDOW_TEXT_COLOR);
 
         calculator.addRect("icon", iconRect, [=](QRectF paintBounds) {
             painter->drawImage(paintBounds, image);
@@ -1047,7 +1041,7 @@ tPaintCalculator Contemporary::paintCalculatorToolButton(const QStyleOptionCompl
             QIcon icon = opt->icon;
             QImage image = icon.pixmap(opt->iconSize).toImage();
             image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-            theLibsGlobal::tintImage(image, WINDOW_TEXT_COLOR);
+            libContemporaryCommon::tintImage(image, WINDOW_TEXT_COLOR);
 
             painter->drawImage(paintBounds, image);
         });
@@ -1286,7 +1280,7 @@ tPaintCalculator Contemporary::paintCalculatorMenuItem(const QStyleOption* optio
 
                     calculator.addRect("icon", iconRect, [=](QRectF drawBounds) {
                         QImage icon = opt->icon.pixmap(pixelMetric(PM_SmallIconSize, opt, widget)).toImage();
-                        theLibsGlobal::tintImage(icon, WINDOW_TEXT_COLOR);
+                        libContemporaryCommon::tintImage(icon, WINDOW_TEXT_COLOR);
                         painter->drawImage(drawBounds, icon);
                     });
                 }
@@ -1493,16 +1487,16 @@ QRect Contemporary::subElementCheckBoxFocusRect(const QStyleOption* option, cons
     OPT_VARS;
 
     QRect indicatorRect;
-    indicatorRect.setLeft(2 * getDPIScaling());
-    indicatorRect.setWidth(12 * getDPIScaling());
-    indicatorRect.setTop(opt->rect.height() / 2 - 12 * getDPIScaling() / 2);
-    indicatorRect.setHeight(12 * getDPIScaling());
+    indicatorRect.setLeft(SC_DPI_W(2, widget));
+    indicatorRect.setWidth(SC_DPI_W(12, widget));
+    indicatorRect.setTop(opt->rect.height() / 2 - SC_DPI_W(12, widget) / 2);
+    indicatorRect.setHeight(SC_DPI_W(12, widget));
 
     QRect rect;
     rect.setLeft(0);
-    rect.setWidth(16 * getDPIScaling());
-    rect.setTop(opt->rect.height() / 2 - 16 * getDPIScaling() / 2);
-    rect.setHeight(16 * getDPIScaling());
+    rect.setWidth(SC_DPI_W(16, widget));
+    rect.setTop(opt->rect.height() / 2 - SC_DPI_W(16, widget) / 2);
+    rect.setHeight(SC_DPI_W(16, widget));
     return rect;
 }
 
