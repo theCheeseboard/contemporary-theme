@@ -19,9 +19,9 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets DBus Svg Network Multimedia)
 find_package(libcontemporary REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-find_package(ECM REQUIRED NO_MODULE)
-set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
-include(KDEInstallDirs)
+#find_package(ECM REQUIRED NO_MODULE)
+#set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+#include(KDEInstallDirs)
 
 add_compile_definitions(SYSTEM_LIBRARY_DIRECTORY="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 

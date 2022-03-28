@@ -141,6 +141,9 @@ void Contemporary::drawControl(ControlElement element, const QStyleOption* optio
         case CE_PushButton:
             drawControlPushButton(option, painter, widget);
             break;
+        case CE_TabBarTabShape:
+            drawControlTabBarTabShape(option, painter, widget);
+            break;
         default:
             QCommonStyle::drawControl(element, option, painter, widget);
     }
@@ -221,6 +224,9 @@ void Contemporary::drawPrimitive(PrimitiveElement primitive, const QStyleOption*
         case PE_FrameGroupBox:
         case PE_Frame:
             drawPrimitiveFrame(option, painter, widget);
+            break;
+        case PE_IndicatorTabClose:
+            drawPrimitiveIndicatorTabClose(option, painter, widget);
             break;
             // default: oldStyle->drawPrimitive(primitive, option, painter, widget);
     }
@@ -1454,7 +1460,7 @@ QPixmap Contemporary::shortcutPixmap(const QFont font, const QPalette pal, const
 QColor Contemporary::buttonBackground(const QStyleOptionButton* opt, const QWidget* widget) const {
     QColor background;
     if (widget && widget->property("type") == "destructive") {
-        if (opt->state & State_On || opt->state & State_Sunken) {
+        if (opt->state & State_On || opt->state & State_Sunken || opt->state & State_Selected) {
             background = QColor(100, 0, 0);
         } else if (opt->state & State_MouseOver) {
             background = QColor(200, 0, 0);
@@ -1462,7 +1468,7 @@ QColor Contemporary::buttonBackground(const QStyleOptionButton* opt, const QWidg
             background = QColor(150, 0, 0);
         }
     } else if (opt->features & QStyleOptionButton::Flat) {
-        if (opt->state & State_On || opt->state & State_Sunken) {
+        if (opt->state & State_On || opt->state & State_Sunken || opt->state & State_Selected) {
             background = QColor(0, 0, 0, 100);
         } else if (opt->state & State_MouseOver) {
             background = QColor(255, 255, 255, 100);
@@ -1470,7 +1476,7 @@ QColor Contemporary::buttonBackground(const QStyleOptionButton* opt, const QWidg
             background = QColor(255, 255, 255, 0);
         }
     } else {
-        if (opt->state & State_On || opt->state & State_Sunken) {
+        if (opt->state & State_On || opt->state & State_Sunken || opt->state & State_Selected) {
             background = BUTTON_PRESS_COLOR;
         } else if (opt->state & State_MouseOver) {
             background = BUTTON_HOVER_COLOR;
@@ -1510,4 +1516,31 @@ void Contemporary::polish(QApplication* application) {
 
 void Contemporary::unpolish(QApplication* application) {
     if (d->focusDecorations->application() == application) d->focusDecorations->clearApplication();
+}
+
+void Contemporary::drawControlTabBarTabShape(const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
+//    painter->fillRect(option->rect, Qt::red);
+    OPT_CAST(QStyleOptionTab);
+    if (opt == nullptr) return;
+    OPT_VARS;
+
+    QStyleOptionButton buttonStyle;
+    buttonStyle.state = opt->state;
+    buttonStyle.rect = opt->rect;
+    buttonStyle.direction = opt->direction;
+
+    tPaintCalculator paintCalculator = paintCalculatorPushButton(&buttonStyle, painter, nullptr);
+    paintCalculator.performPaint();
+}
+
+void Contemporary::drawPrimitiveIndicatorTabClose(const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
+    QColor color(127, 127, 127, 100);
+    if (option->state & State_MouseOver) {
+        color = Qt::red;
+    }
+
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setBrush(color);
+    painter->setPen(Qt::transparent);
+    painter->drawEllipse(option->rect);
 }

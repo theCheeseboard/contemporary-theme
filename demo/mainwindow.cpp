@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget* parent)
     }
 
     ui->checkBox_4->setCheckState(Qt::PartiallyChecked);
+    ui->stackedWidget->setCurrentAnimation(tStackedWidget::Lift);
 
     ui->menuBar->setParent(ui->menuFrame);
     ui->menuLayout->addWidget(ui->menuBar);
@@ -34,6 +35,8 @@ MainWindow::MainWindow(QWidget* parent)
     d->exclusiveGroup->addAction(ui->actionMutually_Exclusive_2);
     d->exclusiveGroup->addAction(ui->actionMutually_Exclusive_3);
     d->exclusiveGroup->setExclusive(true);
+
+    ui->tabWidget->setTabsClosable(true);
 }
 
 MainWindow::~MainWindow() {

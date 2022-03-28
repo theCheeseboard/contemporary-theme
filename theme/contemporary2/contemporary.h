@@ -78,6 +78,7 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
         void drawPrimitivePanelItemViewItem(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawPrimitiveIndicatorArrow(Direction dir, const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawPrimitiveIndicatorBranch(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
+        void drawPrimitiveIndicatorTabClose(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawPrimitiveFrameFocusRect(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
 
         void drawControlProgressBarContents(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
@@ -93,6 +94,7 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
         void drawControlMenubarItem(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawControlToolbar(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
         void drawControlPushButton(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
+        void drawControlTabBarTabShape(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;
 
         void drawComplexComboBox(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;
         void drawComplexToolButton(const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget) const;

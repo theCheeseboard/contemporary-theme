@@ -1024,8 +1024,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>2560</width>
-               <height>1600</height>
+               <width>5120</width>
+               <height>2880</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -1050,7 +1050,7 @@
                  <string/>
                 </property>
                 <property name="pixmap">
-                 <pixmap>../../../../../../usr/share/wallpapers/FlyingKonqui/contents/images/2560x1600.png</pixmap>
+                 <pixmap>../../../../../../usr/share/wallpapers/Next/contents/images/5120x2880.jpg</pixmap>
                 </property>
                </widget>
               </item>
@@ -1072,7 +1072,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
