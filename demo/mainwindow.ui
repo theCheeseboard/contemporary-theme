@@ -195,7 +195,7 @@
       <item>
        <widget class="tStackedWidget" name="stackedWidget">
         <property name="currentIndex">
-         <number>6</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="page">
          <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -215,14 +215,9 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label">
             <property name="text">
-             <string>BUTTONS</string>
+             <string>Buttons</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -281,14 +276,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_4">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label_4">
             <property name="text">
-             <string>TOOL BUTTONS</string>
+             <string>Tool Buttons</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -375,14 +365,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_2">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label_2">
             <property name="text">
-             <string>CHECK BOXES</string>
+             <string>Check Boxes</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -471,9 +456,9 @@
            </layout>
           </item>
           <item>
-           <widget class="QLabel" name="label_3">
+           <widget class="tSubtitleLabel" name="label_3">
             <property name="text">
-             <string>RADIO BUTTONS</string>
+             <string>Radio Buttons</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -553,14 +538,9 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_5">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label_5">
             <property name="text">
-             <string>SLIDERS</string>
+             <string>Sliders</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -631,14 +611,9 @@
            </layout>
           </item>
           <item>
-           <widget class="QLabel" name="label_6">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label_6">
             <property name="text">
-             <string>PROGRESS BARS</string>
+             <string>Progress Bars</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -695,14 +670,9 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_8">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label_8">
             <property name="text">
-             <string>TEXT EDITING</string>
+             <string>Text Editing</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -785,14 +755,9 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_7">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label_7">
             <property name="text">
-             <string>COMBO BOX</string>
+             <string>Combo Box</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -885,14 +850,9 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_9">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
+           <widget class="tSubtitleLabel" name="label_9">
             <property name="text">
-             <string>MENUS</string>
+             <string>Menus</string>
             </property>
             <property name="margin">
              <number>9</number>
@@ -959,9 +919,12 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_10">
+           <widget class="tSubtitleLabel" name="label_10">
             <property name="text">
-             <string>TABS</string>
+             <string>Tabs</string>
+            </property>
+            <property name="margin">
+             <number>9</number>
             </property>
            </widget>
           </item>
@@ -1072,7 +1035,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1290,6 +1253,11 @@
    <slots>
     <signal>backButtonClicked()</signal>
    </slots>
+  </customwidget>
+  <customwidget>
+   <class>tSubtitleLabel</class>
+   <extends>QLabel</extends>
+   <header location="global">tsubtitlelabel.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

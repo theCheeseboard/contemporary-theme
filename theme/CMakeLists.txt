@@ -2,28 +2,11 @@ cmake_minimum_required(VERSION 3.4.0)
 
 project(theme VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-
-if(CMAKE_VERSION VERSION_LESS "3.7.0")
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
-endif()
-
 find_package(Qt6 REQUIRED COMPONENTS Widgets DBus Svg Network Multimedia)
 find_package(libcontemporary REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-#find_package(ECM REQUIRED NO_MODULE)
-#set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
-#include(KDEInstallDirs)
-
-add_compile_definitions(SYSTEM_LIBRARY_DIRECTORY="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+cntp_define_build_dirs()
 
 set(SOURCES
         contemporary2/animations/animation.cpp
@@ -66,5 +49,12 @@ set(HEADERS
         widgetHandlers/scrollbarhandler.h)
 
 add_library(contemporary-widgets SHARED ${SOURCES} ${HEADERS})
+cntp_init(contemporary-widgets 17)
+set_target_properties(contemporary-widgets PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "contemporary")
 
 target_link_libraries(contemporary-widgets Qt6::Widgets Qt6::DBus Qt6::Svg libcontemporary)
+
+install(TARGETS contemporary-widgets
+        DESTINATION ${CNTP_INSTALL_PLUGINS}/styles/)
