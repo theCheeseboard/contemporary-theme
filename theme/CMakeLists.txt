@@ -54,7 +54,11 @@ set_target_properties(contemporary-widgets PROPERTIES
         PREFIX ""
         OUTPUT_NAME "contemporary")
 
+target_compile_definitions(contemporary-widgets PRIVATE CONTEMPORARY_LIBRARY)
+
 target_link_libraries(contemporary-widgets Qt6::Widgets Qt6::DBus Qt6::Svg libcontemporary)
 
+message("${CNTP_INSTALL_PLUGINS}")
 install(TARGETS contemporary-widgets
-        DESTINATION ${CNTP_INSTALL_PLUGINS}/styles/)
+        LIBRARY DESTINATION ${CNTP_INSTALL_PLUGINS}/styles/
+        RUNTIME DESTINATION ${CNTP_INSTALL_PLUGINS}/styles/)
