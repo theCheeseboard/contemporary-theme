@@ -144,6 +144,9 @@ void Contemporary::drawControl(ControlElement element, const QStyleOption* optio
         case CE_TabBarTabShape:
             drawControlTabBarTabShape(option, painter, widget);
             break;
+        case CE_ShapedFrame:
+            drawControlShapedFrame(option, painter, widget);
+            break;
         default:
             QCommonStyle::drawControl(element, option, painter, widget);
     }
@@ -237,7 +240,7 @@ QSize Contemporary::sizeFromContents(ContentsType ct, const QStyleOption* opt, c
         case CT_MenuItem:
             {
                 QStyleOptionMenuItem item(*static_cast<const QStyleOptionMenuItem*>(opt));
-                item.rect = QRect(0, 0, 1, pixelMetric(PM_SmallIconSize, &item, widget) + SC_DPI(8));
+                item.rect = QRect(0, 0, 1, pixelMetric(PM_SmallIconSize, &item, widget) + SC_DPI_W(8, widget));
 
                 tPaintCalculator calculator = paintCalculatorMenuItem(&item, nullptr, widget);
                 calculator.setBoundsCalculationExcludeList({"background"});
@@ -253,7 +256,7 @@ QSize Contemporary::sizeFromContents(ContentsType ct, const QStyleOption* opt, c
 int Contemporary::pixelMetric(PixelMetric m, const QStyleOption* opt, const QWidget* widget) const {
     switch (m) {
         case PM_MessageBoxIconSize:
-            return SC_DPI(64);
+            return SC_DPI_W(64, widget);
         case PM_SubMenuOverlap:
             return 0;
         case PM_MenuPanelWidth:
@@ -267,21 +270,21 @@ int Contemporary::pixelMetric(PixelMetric m, const QStyleOption* opt, const QWid
             return 0;
         case PM_MenuHMargin:
         case PM_MenuVMargin:
-            return SC_DPI(1);
+            return SC_DPI_W(1, widget);
         case PM_CheckBoxLabelSpacing:
         case PM_RadioButtonLabelSpacing:
-            return SC_DPI(4);
+            return SC_DPI_W(4, widget);
         case PM_ToolBarIconSize:
         case PM_SliderControlThickness:
-            return SC_DPI(16);
+            return SC_DPI_W(16, widget);
         case PM_ScrollBarExtent:
         case PM_ScrollView_ScrollBarOverlap:
-            return SC_DPI(10);
+            return SC_DPI_W(10, widget);
         case PM_IndicatorWidth:
         case PM_IndicatorHeight:
         case PM_ExclusiveIndicatorHeight:
         case PM_ExclusiveIndicatorWidth:
-            return SC_DPI(16);
+            return SC_DPI_W(16, widget);
 
         case PM_ButtonShiftHorizontal:
         case PM_ButtonShiftVertical:
@@ -1543,4 +1546,37 @@ void Contemporary::drawPrimitiveIndicatorTabClose(const QStyleOption *option, QP
     painter->setBrush(color);
     painter->setPen(Qt::transparent);
     painter->drawEllipse(option->rect);
+}
+void Contemporary::drawControlShapedFrame(const QStyleOption *option,
+                                          QPainter *painter,
+                                          const QWidget *widget) const {
+    OPT_CAST(QStyleOptionFrame);
+    if (opt == nullptr) return;
+
+    QPolygonF frame;
+    switch (opt->frameShape) {
+        case QFrame::NoFrame:
+            break;
+        case QFrame::Box:
+        case QFrame::StyledPanel:
+        case QFrame::Panel:
+        case QFrame::WinPanel:
+            frame.append(opt->rect.topLeft());
+            frame.append(opt->rect.topRight());
+            frame.append(opt->rect.bottomRight());
+            frame.append(opt->rect.bottomLeft());
+            frame.append(opt->rect.topLeft());
+            break;
+        case QFrame::HLine:
+            frame.append(opt->rect.topLeft());
+            frame.append(opt->rect.topRight());
+            break;
+        case QFrame::VLine:
+            frame.append(opt->rect.topLeft());
+            frame.append(opt->rect.bottomLeft());
+            break;
+    }
+
+    painter->setPen(QPen(libContemporaryCommon::lineColor(opt->palette.color(QPalette::WindowText)), SC_DPI_W(1, widget)));
+    painter->drawPolyline(frame);
 }
