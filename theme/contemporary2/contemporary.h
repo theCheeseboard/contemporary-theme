@@ -9,22 +9,22 @@
 
 #define OPT_CAST(type) const type* opt = qstyleoption_cast<const type*>(option);
 #define OPT_VARS                                                                          \
-    bool reverse = opt->direction == Qt::RightToLeft;                                     \
+    bool reverse = option->direction == Qt::RightToLeft;                                  \
     Qt::AlignmentFlag textHorizontalAlignment = reverse ? Qt::AlignRight : Qt::AlignLeft; \
     Q_UNUSED(textHorizontalAlignment)
 
-#define WINDOW_TEXT_COLOR opt->palette.color(QPalette::WindowText)
-#define WINDOW_COLOR opt->palette.color(QPalette::Window)
+#define WINDOW_TEXT_COLOR option->palette.color(QPalette::WindowText)
+#define WINDOW_COLOR option->palette.color(QPalette::Window)
 #define WINDOW_HOVER_COLOR WINDOW_COLOR.lighter(150)
 #define WINDOW_PRESS_COLOR WINDOW_COLOR.darker(150)
-#define BUTTON_COLOR opt->palette.color(QPalette::Button)
+#define BUTTON_COLOR option->palette.color(QPalette::Button)
 #define BUTTON_HOVER_COLOR BUTTON_COLOR.lighter(150)
 #define BUTTON_PRESS_COLOR BUTTON_COLOR.darker(150)
-#define BUTTON_TEXT_COLOR opt->palette.color(QPalette::ButtonText)
-#define ACCENT_COLOR opt->palette.color(QPalette::Highlight)
+#define BUTTON_TEXT_COLOR option->palette.color(QPalette::ButtonText)
+#define ACCENT_COLOR option->palette.color(QPalette::Highlight)
 #define ACCENT_HOVER_COLOR ACCENT_COLOR.lighter(150)
 #define ACCENT_PRESS_COLOR ACCENT_COLOR.darker(150)
-#define ACCENT_TEXT_COLOR opt->palette.color(QPalette::HighlightedText)
+#define ACCENT_TEXT_COLOR option->palette.color(QPalette::HighlightedText)
 
 struct ContemporaryPrivate;
 class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {

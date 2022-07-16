@@ -688,26 +688,26 @@ QStyle::SubControl Contemporary::hitTestSlider(const QStyleOptionComplex* option
 
 tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* option, QPainter* painter, const QWidget* widget, bool isRadioButton) const {
     OPT_CAST(QStyleOptionButton);
-    if (opt == nullptr) return tPaintCalculator();
+    //    if (opt == nullptr) return tPaintCalculator();
     OPT_VARS;
 
     tPaintCalculator calculator;
-    calculator.setLayoutDirection(opt->direction);
+    calculator.setLayoutDirection(option->direction);
     calculator.setPainter(painter);
     calculator.setDrawBounds(option->rect);
 
     QRect indicatorRect;
     indicatorRect.setWidth(SC_DPI(11)); // 11 to take the pen width into account
     indicatorRect.setHeight(SC_DPI(11));
-    indicatorRect.moveCenter(QPoint(SC_DPI(13), opt->rect.center().y()));
+    indicatorRect.moveCenter(QPoint(SC_DPI(13), option->rect.center().y()));
     calculator.addRect("indicator", indicatorRect, [=](QRectF bounds) {
         painter->save();
         painter->setPen(WINDOW_TEXT_COLOR);
 
         QColor innerColor;
-        if (opt->state & State_Sunken) {
+        if (option->state & State_Sunken) {
             innerColor = WINDOW_PRESS_COLOR;
-        } else if (opt->state & State_MouseOver) {
+        } else if (option->state & State_MouseOver) {
             innerColor = WINDOW_HOVER_COLOR;
         } else {
             innerColor = WINDOW_COLOR;
@@ -716,13 +716,13 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
         if (isRadioButton) {
             painter->setRenderHint(QPainter::Antialiasing);
             painter->setBrush(WINDOW_TEXT_COLOR);
-            painter->drawEllipse(opt->rect);
+            painter->drawEllipse(option->rect);
 
             painter->setBrush(innerColor);
 
-            QRectF onRect = opt->rect;
+            QRectF onRect = option->rect;
             onRect.setSize(onRect.size() *= 0.6);
-            onRect.moveCenter(QRectF(opt->rect).center());
+            onRect.moveCenter(QRectF(option->rect).center());
 
             RadioButtonAnimation* anim = qobject_cast<RadioButtonAnimation*>(d->anim->a(widget));
             if (!anim) {
@@ -730,29 +730,32 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
                 anim->deleteLater();
             }
 
-            if (opt->state & State_On) {
+            if (option->state & State_On) {
                 anim->setIndicatorRect(onRect);
             } else {
-                anim->setIndicatorRect(opt->rect);
+                anim->setIndicatorRect(option->rect);
             }
 
             painter->drawEllipse(anim->currentIndicatorRect());
         } else {
             Qt::CheckState checkState = Qt::Unchecked;
-            if (opt->state & State_NoChange) checkState = Qt::PartiallyChecked;
-            if (opt->state & State_On) checkState = Qt::Checked;
+            if (option->state & State_NoChange) checkState = Qt::PartiallyChecked;
+            if (option->state & State_On) checkState = Qt::Checked;
 
+            bool needsFastForward = false;
             CheckboxAnimation* anim = qobject_cast<CheckboxAnimation*>(d->anim->a(widget));
             if (!anim) {
                 anim = new CheckboxAnimation(nullptr);
                 anim->deleteLater();
+                needsFastForward = true;
             }
 
-            anim->setIndicatorRect(opt->rect);
+            anim->setIndicatorRect(option->rect);
             anim->setCheckState(checkState);
+            anim->fastForward();
 
             painter->setBrush(WINDOW_TEXT_COLOR);
-            painter->drawRect(opt->rect);
+            painter->drawRect(option->rect);
 
             painter->setBrush(innerColor);
             painter->drawRect(anim->currentIndicatorRect());
@@ -764,14 +767,16 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
         painter->restore();
     });
 
-    QRect textRect;
-    textRect.setLeft(indicatorRect.right() + pixelMetric(QStyle::PM_CheckBoxLabelSpacing, option, widget));
-    textRect.setWidth(opt->fontMetrics.horizontalAdvance(opt->text) + 1);
-    textRect.setTop(opt->rect.height() / 2 - opt->fontMetrics.height() / 2);
-    textRect.setHeight(opt->fontMetrics.height());
-    calculator.addRect("contents", textRect, [=](QRectF bounds) {
-        drawItemText(painter, opt->rect, textHorizontalAlignment | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->text, QPalette::WindowText);
-    });
+    if (opt) {
+        QRect textRect;
+        textRect.setLeft(indicatorRect.right() + pixelMetric(QStyle::PM_CheckBoxLabelSpacing, option, widget));
+        textRect.setWidth(opt->fontMetrics.horizontalAdvance(opt->text) + 1);
+        textRect.setTop(opt->rect.height() / 2 - opt->fontMetrics.height() / 2);
+        textRect.setHeight(opt->fontMetrics.height());
+        calculator.addRect("contents", textRect, [=](QRectF bounds) {
+            drawItemText(painter, opt->rect, textHorizontalAlignment | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->text, QPalette::WindowText);
+        });
+    }
 
     return calculator;
 }
@@ -1460,28 +1465,28 @@ QPixmap Contemporary::shortcutPixmap(const QFont font, const QPalette pal, const
     return pixmap;
 }
 
-QColor Contemporary::buttonBackground(const QStyleOptionButton* opt, const QWidget* widget) const {
+QColor Contemporary::buttonBackground(const QStyleOptionButton* option, const QWidget* widget) const {
     QColor background;
     if (widget && widget->property("type") == "destructive") {
-        if (opt->state & State_On || opt->state & State_Sunken || opt->state & State_Selected) {
+        if (option->state & State_On || option->state & State_Sunken || option->state & State_Selected) {
             background = QColor(100, 0, 0);
-        } else if (opt->state & State_MouseOver) {
+        } else if (option->state & State_MouseOver) {
             background = QColor(200, 0, 0);
         } else {
             background = QColor(150, 0, 0);
         }
-    } else if (opt->features & QStyleOptionButton::Flat) {
-        if (opt->state & State_On || opt->state & State_Sunken || opt->state & State_Selected) {
+    } else if (option->features & QStyleOptionButton::Flat) {
+        if (option->state & State_On || option->state & State_Sunken || option->state & State_Selected) {
             background = QColor(0, 0, 0, 100);
-        } else if (opt->state & State_MouseOver) {
+        } else if (option->state & State_MouseOver) {
             background = QColor(255, 255, 255, 100);
         } else {
             background = QColor(255, 255, 255, 0);
         }
     } else {
-        if (opt->state & State_On || opt->state & State_Sunken || opt->state & State_Selected) {
+        if (option->state & State_On || option->state & State_Sunken || option->state & State_Selected) {
             background = BUTTON_PRESS_COLOR;
-        } else if (opt->state & State_MouseOver) {
+        } else if (option->state & State_MouseOver) {
             background = BUTTON_HOVER_COLOR;
         } else {
             background = BUTTON_COLOR;
@@ -1521,8 +1526,8 @@ void Contemporary::unpolish(QApplication* application) {
     if (d->focusDecorations->application() == application) d->focusDecorations->clearApplication();
 }
 
-void Contemporary::drawControlTabBarTabShape(const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
-//    painter->fillRect(option->rect, Qt::red);
+void Contemporary::drawControlTabBarTabShape(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
+    //    painter->fillRect(option->rect, Qt::red);
     OPT_CAST(QStyleOptionTab);
     if (opt == nullptr) return;
     OPT_VARS;
@@ -1536,7 +1541,7 @@ void Contemporary::drawControlTabBarTabShape(const QStyleOption *option, QPainte
     paintCalculator.performPaint();
 }
 
-void Contemporary::drawPrimitiveIndicatorTabClose(const QStyleOption *option, QPainter *painter, const QWidget *widget) const {
+void Contemporary::drawPrimitiveIndicatorTabClose(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
     QColor color(127, 127, 127, 100);
     if (option->state & State_MouseOver) {
         color = Qt::red;
@@ -1547,9 +1552,9 @@ void Contemporary::drawPrimitiveIndicatorTabClose(const QStyleOption *option, QP
     painter->setPen(Qt::transparent);
     painter->drawEllipse(option->rect);
 }
-void Contemporary::drawControlShapedFrame(const QStyleOption *option,
-                                          QPainter *painter,
-                                          const QWidget *widget) const {
+void Contemporary::drawControlShapedFrame(const QStyleOption* option,
+    QPainter* painter,
+    const QWidget* widget) const {
     OPT_CAST(QStyleOptionFrame);
     if (opt == nullptr) return;
 

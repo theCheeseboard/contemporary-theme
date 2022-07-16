@@ -3,11 +3,10 @@
 
 #include <QWidget>
 
-class Animation : public QObject
-{
+class Animation : public QObject {
         Q_OBJECT
     public:
-        explicit Animation(QWidget* animating, QObject *parent = nullptr);
+        explicit Animation(QWidget* animating, QObject* parent = nullptr);
 
     signals:
 

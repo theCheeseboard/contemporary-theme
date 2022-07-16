@@ -10,6 +10,8 @@ class CheckboxAnimation : public Animation {
         explicit CheckboxAnimation(QWidget* animating, QObject* parent = nullptr);
         ~CheckboxAnimation();
 
+        void fastForward();
+
         void setIndicatorRect(QRectF indicator);
         void setCheckState(Qt::CheckState checkState);
 
