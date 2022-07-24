@@ -46,7 +46,7 @@ ScrollBarAnimation::ScrollBarAnimation(QWidget* animating, QObject* parent) :
     d->opacity->setEndValue(1.0);
     connect(d->opacity, &tVariantAnimation::valueChanged, this, [=](QVariant value) {
         d->currentOpacity = value.toDouble();
-        animatingWidget->update();
+        if (animatingWidget) animatingWidget->update();
     });
     d->opacity->setDuration(100);
 
@@ -55,7 +55,7 @@ ScrollBarAnimation::ScrollBarAnimation(QWidget* animating, QObject* parent) :
     d->widthScaling->setEndValue(1.0);
     connect(d->widthScaling, &tVariantAnimation::valueChanged, this, [=](QVariant value) {
         d->currentWidthScaling = value.toDouble();
-        animatingWidget->update();
+        if (animatingWidget) animatingWidget->update();
     });
     d->widthScaling->setDuration(100);
 

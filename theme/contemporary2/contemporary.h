@@ -7,7 +7,7 @@
 #include <tpaintcalculator.h>
 #include <tvariantanimation.h>
 
-#define OPT_CAST(type) const type* opt = qstyleoption_cast<const type*>(option);
+#define OPT_CAST(type) const auto* opt = qstyleoption_cast<const type*>(option);
 #define OPT_VARS                                                                          \
     bool reverse = option->direction == Qt::RightToLeft;                                  \
     Qt::AlignmentFlag textHorizontalAlignment = reverse ? Qt::AlignRight : Qt::AlignLeft; \

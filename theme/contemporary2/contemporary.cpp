@@ -507,7 +507,7 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption* option, QPai
         QRect triangleRect = rect;
         triangleRect.setTop(rect.top() + (rect.height()) / 2 - SC_DPI_W(4, widget));
         triangleRect.setLeft(rect.left() + (rect.width()) / 2 - SC_DPI_W(4, widget));
-        triangleRect.setSize(QSize(SC_DPI_W(8, widget), SC_DPI_W(4, widget)));
+        triangleRect.setSize(QSize(SC_DPI_W(8, widget), SC_DPI_W(8, widget)));
         painter->setBrush(WINDOW_TEXT_COLOR);
         painter->drawRect(triangleRect);
     }
@@ -517,7 +517,7 @@ void Contemporary::drawPrimitiveIndicatorBranch(const QStyleOption* option, QPai
         QRect triangleRect = rect;
         triangleRect.setTop(rect.top() + (rect.height()) / 2 - SC_DPI_W(4, widget));
         triangleRect.setLeft(rect.left() + (rect.width()) / 2 - SC_DPI_W(4, widget));
-        triangleRect.setSize(QSize(SC_DPI_W(8, widget), SC_DPI_W(4, widget)));
+        triangleRect.setSize(QSize(SC_DPI_W(8, widget), SC_DPI_W(8, widget)));
         painter->setBrush(WINDOW_COLOR);
         painter->setPen(WINDOW_TEXT_COLOR);
         painter->drawRect(triangleRect);

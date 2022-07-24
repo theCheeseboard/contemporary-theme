@@ -1,6 +1,7 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
+#include <QPointer>
 #include <QWidget>
 
 class Animation : public QObject {
@@ -13,7 +14,7 @@ class Animation : public QObject {
     public slots:
 
     protected:
-        QWidget* animatingWidget;
+        QPointer<QWidget> animatingWidget;
 };
 
 #endif // ANIMATION_H
