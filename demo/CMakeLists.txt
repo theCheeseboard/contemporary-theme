@@ -4,7 +4,6 @@ project(demo VERSION 1.0.0 LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets DBus Svg Network Multimedia)
 find_package(libcontemporary REQUIRED)
-find_package(PkgConfig REQUIRED)
 
 set(SOURCES
         mainwindow.cpp

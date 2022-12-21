@@ -1,10 +1,9 @@
-cmake_minimum_required(VERSION 3.4.0)
+cmake_minimum_required(VERSION 3.20.0)
 
 project(theme VERSION 1.0.0 LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets DBus Svg Network Multimedia)
 find_package(libcontemporary REQUIRED)
-find_package(PkgConfig REQUIRED)
 
 cntp_define_build_dirs()
 
