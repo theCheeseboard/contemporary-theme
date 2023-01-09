@@ -110,6 +110,7 @@ class CONTEMPORARYSHARED_EXPORT Contemporary : public QCommonStyle {
         QRect subElementPushButtonFocusRect(const QStyleOption* option, const QWidget* widget) const;
 
         SubControl hitTestSlider(const QStyleOptionComplex* option, const QPoint& point, const QWidget* widget) const;
+        SubControl hitTestScrollBar(const QStyleOptionComplex* option, const QPoint& point, const QWidget* widget) const;
 
         tPaintCalculator paintCalculatorCheckBox(const QStyleOption* option, QPainter* painter, const QWidget* widget, bool isRadioButton) const;
         tPaintCalculator paintCalculatorPushButton(const QStyleOption* option, QPainter* painter, const QWidget* widget) const;

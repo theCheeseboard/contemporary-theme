@@ -372,6 +372,8 @@ Contemporary::SubControl Contemporary::hitTestComplexControl(ComplexControl cc, 
     switch (cc) {
         case CC_Slider:
             return hitTestSlider(option, pt, w);
+        case CC_ScrollBar:
+            return hitTestScrollBar(option, pt, w);
         default:
             return d->oldStyle->hitTestComplexControl(cc, option, pt, w);
     }
@@ -684,6 +686,12 @@ QStyle::SubControl Contemporary::hitTestSlider(const QStyleOptionComplex* option
     QStringList areas = paintCalculatorSlider(option, nullptr, widget).hitTest(point);
     if (areas.contains("thumb")) return QStyle::SC_SliderHandle;
     return QStyle::SC_SliderGroove;
+}
+
+QStyle::SubControl Contemporary::hitTestScrollBar(const QStyleOptionComplex* option, const QPoint& point, const QWidget* widget) const {
+    QStringList areas = paintCalculatorScrollBar(option, nullptr, widget).hitTest(point);
+    if (areas.contains("slider")) return QStyle::SC_ScrollBarSlider;
+    return QStyle::SC_ScrollBarGroove;
 }
 
 tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* option, QPainter* painter, const QWidget* widget, bool isRadioButton) const {
@@ -1401,7 +1409,10 @@ tPaintCalculator Contemporary::paintCalculatorScrollBar(const QStyleOption* opti
         widthScaling = anim->widthScaling();
     }
 
-    QRectF sliderRect = this->subControlRect(QStyle::CC_ScrollBar, opt, SC_ScrollBarSlider, widget);
+    // Always ask for an LTR version: we don't want to double flip the slider
+    QStyleOptionSlider subControlRect(*opt);
+    subControlRect.direction = Qt::LeftToRight;
+    QRectF sliderRect = this->subControlRect(QStyle::CC_ScrollBar, &subControlRect, SC_ScrollBarSlider, widget);
 
     if (opt->orientation == Qt::Vertical) {
         int right = sliderRect.right();
@@ -1413,7 +1424,7 @@ tPaintCalculator Contemporary::paintCalculatorScrollBar(const QStyleOption* opti
         sliderRect.moveBottom(bottom);
     }
 
-    calculator.addRect(sliderRect, [=](QRectF drawBounds) {
+    calculator.addRect("slider", sliderRect, [=](QRectF drawBounds) {
         if (anim) painter->setOpacity(anim->opacity());
         painter->fillRect(drawBounds, ACCENT_COLOR);
     });
