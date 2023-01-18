@@ -246,6 +246,18 @@ QSize Contemporary::sizeFromContents(ContentsType ct, const QStyleOption* opt, c
                 calculator.setBoundsCalculationExcludeList({"background"});
                 return calculator.sizeWithMargins().toSize();
             }
+        case CT_PushButton:
+            {
+                QStyleOptionButton item(*static_cast<const QStyleOptionButton*>(opt));
+                item.rect = QRect(0, 0, 1, 1);
+
+                tPaintCalculator calculator = paintCalculatorPushButton(&item, nullptr, widget);
+                calculator.setBoundsCalculationExcludeList({"background"});
+                QPointF offset = calculator.rectNames().contains("supplementaryText") ? QPointF(9, 6) : QPointF(9, 9);
+                auto size = calculator.sizeWithMargins(calculator.visualBoundingRect().topLeft() - SC_DPI_WT(offset, QPointF, widget)).toSize();
+                if (size.height() < SC_DPI_W(16, widget)) size.setHeight(SC_DPI_W(16, widget));
+                return size;
+            }
         case CT_ScrollBar:
             return QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
         default:
@@ -627,6 +639,7 @@ void Contemporary::drawControlPushButtonLabel(const QStyleOption* option, QPaint
     tPaintCalculator paintCalculator = paintCalculatorPushButton(option, painter, widget);
     paintCalculator.performPaint("icon");
     paintCalculator.performPaint("text");
+    paintCalculator.performPaint("supplementaryText");
 }
 
 void Contemporary::drawControlComboBoxLabel(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
@@ -835,6 +848,27 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
     textRect.setTop(opt->rect.top() + (opt->rect.height() / 2) - (opt->fontMetrics.height() / 2));
     textRect.setHeight(opt->fontMetrics.height());
 
+    auto supplementaryText = widget->property("supplementaryText").toString();
+    QRect supplementaryTextRect = textRect;
+    QFont supplementaryTextFont = widget->font();
+    supplementaryTextFont.setPointSizeF(supplementaryTextFont.pointSizeF() * 0.7);
+
+    if (widget && !supplementaryText.isEmpty()) {
+        QFontMetrics supplementaryTextFontMetrics(supplementaryTextFont);
+
+        supplementaryTextRect.setWidth(supplementaryTextFontMetrics.horizontalAdvance(supplementaryText) + 1);
+        supplementaryTextRect.setHeight(supplementaryTextFontMetrics.height());
+
+        textRect.moveTop(opt->rect.top() + (opt->rect.height() / 2) - ((opt->fontMetrics.height() + supplementaryTextRect.height()) / 2) - SC_DPI_W(1, widget));
+        supplementaryTextRect.moveTop(textRect.bottom() + SC_DPI_W(2, widget));
+
+        if (supplementaryTextRect.width() > textRect.width()) {
+            // Center the text based on the supplementary text rect
+            supplementaryTextRect.moveLeft(opt->rect.left() + (opt->rect.width() / 2) - (supplementaryTextRect.width() / 2));
+            textRect.moveLeft(supplementaryTextRect.left());
+        }
+    }
+
     if (!opt->icon.isNull()) {
         int fullWidth = textRect.width() + opt->iconSize.width();
         int iconLeft = opt->rect.left() + (opt->rect.width() / 2) - (fullWidth / 2);
@@ -844,6 +878,7 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
         iconRect.setSize(opt->iconSize);
 
         textRect.moveLeft(iconRect.right() + SC_DPI(4));
+        supplementaryTextRect.moveLeft(iconRect.right() + SC_DPI(4));
 
         QIcon icon = opt->icon;
         QImage image = icon.pixmap(opt->iconSize).toImage();
@@ -856,6 +891,15 @@ tPaintCalculator Contemporary::paintCalculatorPushButton(const QStyleOption* opt
     }
 
     // Draw text
+    if (widget && !supplementaryText.isEmpty()) {
+        calculator.addRect("supplementaryText", supplementaryTextRect, [painter, supplementaryTextFont, supplementaryText](QRectF paintBounds) {
+            painter->save();
+            painter->setFont(supplementaryTextFont);
+            painter->drawText(paintBounds, Qt::AlignLeft, supplementaryText);
+            painter->restore();
+        });
+    }
+
     calculator.addRect("text", textRect, [=](QRectF paintBounds) {
         drawItemText(painter, paintBounds.toRect(), Qt::AlignCenter, opt->palette, opt->state & QStyle::State_Enabled, opt->text, QPalette::ButtonText);
     });
