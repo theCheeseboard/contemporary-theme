@@ -11,6 +11,8 @@
 #include "animations/scrollbaranimation.h"
 #include "animations/viewitemanimation.h"
 
+#include "widgets/polishengine.h"
+
 #include <QAbstractItemView>
 #include <QLineEdit>
 #include <QStyleOptionButton>
@@ -25,6 +27,7 @@ struct ContemporaryPrivate {
         Style* oldStyle;
         AnimationEngine* anim;
         FocusDecorationController* focusDecorations;
+        PolishEngine* polish;
 };
 
 Contemporary::Contemporary() {
@@ -32,6 +35,7 @@ Contemporary::Contemporary() {
     d->oldStyle = new Style();
     d->anim = new AnimationEngine;
     d->focusDecorations = new FocusDecorationController();
+    d->polish = new PolishEngine();
 
     d->indeterminateTimer = new QTimer(this);
     if (libContemporaryCommon::instance()->powerStretchEnabled()) {
@@ -60,6 +64,7 @@ Contemporary::Contemporary() {
 }
 
 Contemporary::~Contemporary() {
+    delete d->polish;
     delete d->oldStyle;
     delete d->anim;
     delete d->animations;
@@ -353,6 +358,7 @@ QRect Contemporary::subElementRect(SubElement r, const QStyleOption* opt, const 
 }
 
 void Contemporary::polish(QWidget* widget) {
+    d->polish->registerWidget(widget);
     d->anim->registerWidget(widget);
 
     d->oldStyle->polish(widget);
@@ -360,6 +366,7 @@ void Contemporary::polish(QWidget* widget) {
 
 void Contemporary::unpolish(QWidget* widget) {
     d->anim->deregisterWidget(widget);
+    d->polish->deregisterWidget(widget);
 }
 
 int Contemporary::styleHint(StyleHint sh, const QStyleOption* opt, const QWidget* w, QStyleHintReturn* shret) const {

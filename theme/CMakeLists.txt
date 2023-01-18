@@ -25,7 +25,9 @@ set(SOURCES
         widgetHandlers/abstractitemviewhandler.cpp
         widgetHandlers/abstractscrollareahandler.cpp
         widgetHandlers/abstractwidgethandler.cpp
-        widgetHandlers/scrollbarhandler.cpp)
+        widgetHandlers/scrollbarhandler.cpp
+        contemporary2/widgets/polishengine.cpp
+    )
 
 set(HEADERS
         contemporary2/animations/animation.h
@@ -45,7 +47,9 @@ set(HEADERS
         widgetHandlers/abstractitemviewhandler.h
         widgetHandlers/abstractscrollareahandler.h
         widgetHandlers/abstractwidgethandler.h
-        widgetHandlers/scrollbarhandler.h)
+        widgetHandlers/scrollbarhandler.h
+        contemporary2/widgets/polishengine.h
+    )
 
 add_library(contemporary-widgets SHARED ${SOURCES} ${HEADERS})
 cntp_init(contemporary-widgets 17)

@@ -28,8 +28,9 @@ void AnimationEngine::registerWidget(QWidget* widget) {
         anim = new RadioButtonAnimation(widget);
     } else if (qobject_cast<QCheckBox*>(widget)) {
         anim = new CheckboxAnimation(widget);
-    } else if (qobject_cast<QAbstractButton*>(widget)) {
+    } else if (auto btn = qobject_cast<QAbstractButton*>(widget)) {
         anim = new PushButtonAnimation(widget);
+        btn->installEventFilter(this);
     } else if (qobject_cast<QAbstractItemView*>(widget)) {
         anim = new ViewItemAnimation(widget);
     } else if (qobject_cast<QMenu*>(widget)) {
