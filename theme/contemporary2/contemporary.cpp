@@ -376,6 +376,7 @@ int Contemporary::styleHint(StyleHint sh, const QStyleOption* opt, const QWidget
         case SH_ComboBox_Popup:
         case SH_Menu_MouseTracking:
         case SH_MenuBar_MouseTracking:
+        case SH_ItemView_ActivateItemOnSingleClick:
             return true;
 
         default:
