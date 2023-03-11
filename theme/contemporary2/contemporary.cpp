@@ -781,7 +781,7 @@ tPaintCalculator Contemporary::paintCalculatorCheckBox(const QStyleOption* optio
 
             anim->setIndicatorRect(option->rect);
             anim->setCheckState(checkState);
-            anim->fastForward();
+            if (needsFastForward) anim->fastForward();
 
             painter->setBrush(WINDOW_TEXT_COLOR);
             painter->drawRect(option->rect);

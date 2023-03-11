@@ -19,7 +19,7 @@ set(SOURCES
         contemporary2/contemporary.cpp
         focusDecorations/focusdecoration.cpp
         focusDecorations/focusdecorationcontroller.cpp
-        plugin.cpp
+        contemporarythemeplugin.cpp
         contemporarydefs.cpp
         contemporarylegacy.cpp
         widgetHandlers/abstractitemviewhandler.cpp
@@ -42,7 +42,7 @@ set(HEADERS
         contemporary_global.h
         focusDecorations/focusdecoration.h
         focusDecorations/focusdecorationcontroller.h
-        plugin.h
+        contemporarythemeplugin.h
         contemporarylegacy.h
         widgetHandlers/abstractitemviewhandler.h
         widgetHandlers/abstractscrollareahandler.h
