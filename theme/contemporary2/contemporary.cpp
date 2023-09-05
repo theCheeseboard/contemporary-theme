@@ -652,6 +652,7 @@ void Contemporary::drawControlPushButtonLabel(const QStyleOption* option, QPaint
 
 void Contemporary::drawControlComboBoxLabel(const QStyleOption* option, QPainter* painter, const QWidget* widget) const {
     tPaintCalculator paintCalculator = paintCalculatorComboBox(option, painter, widget);
+    paintCalculator.performPaint("icon");
     paintCalculator.performPaint("text");
 }
 
@@ -1218,15 +1219,26 @@ tPaintCalculator Contemporary::paintCalculatorComboBox(const QStyleOption* optio
     textRect.moveCenter(opt->rect.center());
 
     if (opt->currentIcon.isNull()) {
-        textRect.moveLeft(opt->rect.left() + SC_DPI(4));
+        textRect.moveLeft(opt->rect.left() + 4);
     } else {
-        textRect.moveLeft(opt->rect.left() + SC_DPI(8) + opt->iconSize.width());
+        textRect.moveLeft(opt->rect.left() + 8 + opt->iconSize.width());
     }
 
     calculator.addRect("text", textRect, [=](QRectF drawBounds) {
         if (opt->editable) return; // Don't draw any text if it is editable
         drawItemText(painter, drawBounds.toRect(), textHorizontalAlignment | Qt::AlignVCenter, opt->palette, opt->state & State_Enabled, opt->currentText, QPalette::WindowText);
     });
+
+    if (!opt->currentIcon.isNull()) {
+        QRect iconRect;
+        iconRect.setSize(opt->iconSize);
+        iconRect.moveCenter(opt->rect.center());
+        iconRect.moveLeft(opt->rect.left() + 4);
+
+        calculator.addRect("icon", iconRect, [opt, painter](QRectF drawBounds) {
+            painter->drawPixmap(drawBounds.toRect(), opt->currentIcon.pixmap(drawBounds.size().toSize()));
+        });
+    }
 
     if (opt->subControls & SC_ComboBoxArrow) {
         QRect arrowBounds;
