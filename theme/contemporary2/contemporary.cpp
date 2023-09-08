@@ -425,6 +425,10 @@ void Contemporary::drawPrimitivePanelLineEdit(const QStyleOption* option, QPaint
     if (opt == nullptr) return;
     OPT_VARS
 
+    if (widget && (widget->autoFillBackground() || (widget->parentWidget() && qobject_cast<QAbstractItemView*>(widget->parentWidget()->parentWidget())))) {
+        painter->fillRect(opt->rect, opt->palette.color(QPalette::Window));
+    }
+
     if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(option->styleObject)) {
         if (!lineEdit->hasFrame()) return;
     }
