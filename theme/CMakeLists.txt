@@ -57,6 +57,12 @@ set_target_properties(contemporary-widgets PROPERTIES
         PREFIX ""
         OUTPUT_NAME "contemporary")
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+set_target_properties(contemporary-widgets PROPERTIES
+        PREFIX "libplugins_styles_"
+        SUFFIX "_${CMAKE_ANDROID_ARCH_ABI}")
+ENDIF()
+
 target_compile_definitions(contemporary-widgets PRIVATE CONTEMPORARY_LIBRARY)
 
 target_link_libraries(contemporary-widgets Qt::Widgets Qt::Svg libcontemporary)
