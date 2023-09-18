@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.4.0)
 
 project(demo VERSION 1.0.0 LANGUAGES CXX)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets DBus Svg Network Multimedia)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Svg Network Multimedia)
 find_package(libcontemporary REQUIRED)
 
 set(SOURCES

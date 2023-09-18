@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20.0)
 
 project(theme VERSION 1.0.0 LANGUAGES CXX)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets DBus Svg Network Multimedia)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg Network Multimedia OPTIONAL_COMPONENTS DBus)
 find_package(libcontemporary REQUIRED)
 
 cntp_define_build_dirs()
@@ -59,7 +59,10 @@ set_target_properties(contemporary-widgets PROPERTIES
 
 target_compile_definitions(contemporary-widgets PRIVATE CONTEMPORARY_LIBRARY)
 
-target_link_libraries(contemporary-widgets Qt::Widgets Qt::DBus Qt::Svg libcontemporary)
+target_link_libraries(contemporary-widgets Qt::Widgets Qt::Svg libcontemporary)
+if(TARGET Qt::DBus)
+    target_link_libraries(contemporary-widgets Qt::DBus)
+endif()
 
 message("${CNTP_INSTALL_PLUGINS}")
 install(TARGETS contemporary-widgets
